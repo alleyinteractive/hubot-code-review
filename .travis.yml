@@ -1,0 +1,25 @@
+sudo: false
+
+branches:
+  only:
+    - master
+
+language: node_js
+
+node_js:
+  - "4"
+  - "6"
+
+notifications:
+  email: false
+
+install:
+    - npm install
+
+cache:
+  directories:
+    - node_modules
+
+script:
+    - npm run lint
+    - npm run test
