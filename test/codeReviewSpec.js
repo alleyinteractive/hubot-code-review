@@ -81,10 +81,10 @@ describe("code-review.coffee", function() {
   });
 
   it('turns a GitHub PR URL into a Code Review slug', function(done) {
-    var slug = code_reviews.matches_to_slug(code_reviews.pr_url_regex.exec('https://github.com/alleyinteractive/europeanvoice/pull/558'));
-    expect(slug).toEqual('europeanvoice/558');
-    var slug = code_reviews.matches_to_slug(code_reviews.pr_url_regex.exec('https://github.com/alleyinteractive/europeanvoice/pull/558/files'));
-    expect(slug).toEqual('europeanvoice/558');
+    var slug = code_reviews.matches_to_slug(code_reviews.pr_url_regex.exec('https://github.com/alleyinteractive/wordpress-fieldmanager/pull/558'));
+    expect(slug).toEqual('wordpress-fieldmanager/558');
+    var slug = code_reviews.matches_to_slug(code_reviews.pr_url_regex.exec('https://github.com/alleyinteractive/wordpress-fieldmanager/pull/558/files'));
+    expect(slug).toEqual('wordpress-fieldmanager/558');
     done();
   });
 
@@ -123,7 +123,7 @@ describe("code-review.coffee", function() {
 
       // there should be one CR in the room queue
       expect(code_reviews.room_queues[rooms[0]].length).toEqual(1);
-      expect(code_reviews.room_queues[rooms[0]][0].url).toEqual("https://github.com/alleyinteractive/bayarea/pull/71");
+      expect(code_reviews.room_queues[rooms[0]][0].url).toEqual("https://github.com/alleyinteractive/ad-layers/pull/71");
 
       // hubot replies as expected
       expect(strings[0]).toMatch(re);
@@ -225,7 +225,7 @@ describe("code-review.coffee", function() {
   });
 
   it('claims specific CR from queue', function(done) {
-    var slug = 'europeanvoice/559';
+    var slug = 'wordpress-fieldmanager/559';
     var reviewer = users[9];
     var urlsToAdd = [PullRequests[1], PullRequests[2], PullRequests[3]];
     urlsToAdd.forEach(function(url, i) {
@@ -264,7 +264,7 @@ describe("code-review.coffee", function() {
     });
 
     // claim a CR
-    util.sendMessageAsync(adapter, users[0], 'on bayarea/71', 1, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[0], 'on ad-layers/71', 1, function(envelope, strings) {
       expect(code_reviews.room_queues.test_room[2].status).toBe('claimed');
       expect(code_reviews.room_queues.test_room[2].reviewer).toBe(users[0].name);
     });
@@ -275,10 +275,10 @@ describe("code-review.coffee", function() {
     });
 
     // unclaim the CR
-    util.sendMessageAsync(adapter, users[0], 'hubot: unclaim bayarea/71', 100, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[0], 'hubot: unclaim ad-layers/71', 100, function(envelope, strings) {
       expect(code_reviews.room_queues.test_room[2].status).toBe('new');
       expect(code_reviews.room_queues.test_room[2].reviewer).toBe(false);
-      expect(strings[0]).toBe("You got it, I've unclaimed *bayarea/71* in the queue.");
+      expect(strings[0]).toBe("You got it, I've unclaimed *ad-layers/71* in the queue.");
       done();
     });
 
@@ -289,16 +289,16 @@ describe("code-review.coffee", function() {
     addNewCR(PullRequests[0], null, 1);
 
     // user claims the CR
-    util.sendMessageAsync(adapter, users[1], 'on guggenheim/378', 1, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[1], 'on wp-seo/378', 1, function(envelope, strings) {
       // should be claimed by that user
       expect(code_reviews.room_queues.test_room[0].status).toBe('claimed');
       expect(code_reviews.room_queues.test_room[0].reviewer).toBe(users[1].name);
 
       // "redo" should reset the CR without decrementing user's score
-      util.sendMessageAsync(adapter, users[1], 'hubot: redo guggenheim/378', 1, function(envelope, strings) {
+      util.sendMessageAsync(adapter, users[1], 'hubot: redo wp-seo/378', 1, function(envelope, strings) {
         expect(code_reviews.room_queues.test_room[0].status).toBe('new');
         expect(code_reviews.room_queues.test_room[0].reviewer).toBe(false);
-        expect(strings[0]).toBe("You got it, guggenheim/378 is ready for a new review.");
+        expect(strings[0]).toBe("You got it, wp-seo/378 is ready for a new review.");
         done();
       });
     });
@@ -319,30 +319,30 @@ describe("code-review.coffee", function() {
     });
 
     // multiple unclaimed matches
-    util.sendMessageAsync(adapter, users[7], 'on voice', 100, function(envelope, strings) {
-      expect(strings[0]).toBe("You're gonna have to be more specific: `europeanvoice/558`, or `europeanvoice/559`?");
+    util.sendMessageAsync(adapter, users[7], 'on fieldmanager', 100, function(envelope, strings) {
+      expect(strings[0]).toBe("You're gonna have to be more specific: `wordpress-fieldmanager/558`, or `wordpress-fieldmanager/559`?");
     });
 
     // 1 match, unclaimed
     util.sendMessageAsync(adapter, users[7], 'on 559', 300, function(envelope, strings) {
-      expect(strings[0]).toBe('Thanks, ' + users[7].name + '! I removed *europeanvoice/559* from the code review queue.');
+      expect(strings[0]).toBe('Thanks, ' + users[7].name + '! I removed *wordpress-fieldmanager/559* from the code review queue.');
     });
 
     // 1 match, claimed
     util.sendMessageAsync(adapter, users[8], 'on 559', 500, function(envelope, strings) {
       var bothResponses = new RegExp("Sorry, I couldn't find any new PRs in this room matching `559`."
-        + "|It looks like \\*europeanvoice\/559\\* \\(@[a-zA-Z]+\\) has already been claimed");
+        + "|It looks like \\*wordpress-fieldmanager\/559\\* \\(@[a-zA-Z]+\\) has already been claimed");
       expect(strings[0]).toMatch(bothResponses);
     });
 
     // multiple matches, only 1 is unclaimed
-    util.sendMessageAsync(adapter, users[8], 'on voice', 700, function(envelope, strings) {
-      expect(strings[0]).toBe('Thanks, ' + users[8].name + '! I removed *europeanvoice/558* from the code review queue.');
+    util.sendMessageAsync(adapter, users[8], 'on fieldmanager', 700, function(envelope, strings) {
+      expect(strings[0]).toBe('Thanks, ' + users[8].name + '! I removed *wordpress-fieldmanager/558* from the code review queue.');
     });
 
     // multiple matches, all claimed
-    util.sendMessageAsync(adapter, users[8], 'on voice', 800, function(envelope, strings) {
-      expect(strings[0]).toBe("Sorry, I couldn't find any new PRs in this room matching `voice`.");
+    util.sendMessageAsync(adapter, users[8], 'on fieldmanager', 800, function(envelope, strings) {
+      expect(strings[0]).toBe("Sorry, I couldn't find any new PRs in this room matching `fieldmanager`.");
     });
 
     // matches CR that was updated (e.g. by webhook) before it was claimed
@@ -434,7 +434,7 @@ describe("code-review.coffee", function() {
         // ignore newest CR
         util.sendMessageAsync(adapter, users[8], 'hubot ignore', 1, function(envelope, strings) {
           expect(code_reviews.room_queues.test_room.length).toBe(PullRequests.length - 1);
-          expect(code_reviews.room_queues.test_room[0].slug).toBe('europeanvoice/558');
+          expect(code_reviews.room_queues.test_room[0].slug).toBe('wordpress-fieldmanager/558');
           done();
         });
       }
@@ -464,11 +464,11 @@ describe("code-review.coffee", function() {
     });
 
     // ignore a couple specific crs
-    util.sendMessageAsync(adapter, reviewer, 'ignore europeanvoice/559', 100, function(envelope, strings) {
-      expect(strings[0]).toBe('Sorry for eavesdropping. I removed *europeanvoice/559* from the queue.');
+    util.sendMessageAsync(adapter, reviewer, 'ignore wordpress-fieldmanager/559', 100, function(envelope, strings) {
+      expect(strings[0]).toBe('Sorry for eavesdropping. I removed *wordpress-fieldmanager/559* from the queue.');
     });
-    util.sendMessageAsync(adapter, reviewer, 'ignore newgta', 400, function(envelope, strings) {
-      expect(strings[0]).toBe('Sorry for eavesdropping. I removed *newgta/567* from the queue.');
+    util.sendMessageAsync(adapter, reviewer, 'ignore huron', 400, function(envelope, strings) {
+      expect(strings[0]).toBe('Sorry for eavesdropping. I removed *huron/567* from the queue.');
       done();
     });
   });
@@ -762,7 +762,7 @@ describe("code-review.coffee", function() {
   });
 
   it('DMs user when CR is approved', function(done) {
-    var url = 'https://github.com/alleyinteractive/newgta/pull/567';
+    var url = 'https://github.com/alleyinteractive/huron/pull/567';
     addNewCR(url);
 
     // setup the data we want to pretend that Github is sending
@@ -899,7 +899,7 @@ describe("code-review.coffee", function() {
    *    string expectedStatus
    */
   function testCommentText(args, done) {
-    var url = 'https://github.com/alleyinteractive/newgta/pull/567';
+    var url = 'https://github.com/alleyinteractive/huron/pull/567';
     addNewCR(url);
 
     // setup the data we want to pretend that Github is sending
