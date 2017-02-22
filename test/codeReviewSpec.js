@@ -4,6 +4,7 @@ require('jasmine-custom-message');
 var path       = require('path'),
   Robot        = require('../node_modules/hubot/src/robot'),
   TextMessage  = require('../node_modules/hubot/src/message').TextMessage,
+  util         = require('./lib/util');
   Users        = require('./data/users'),
   PullRequests = require('./data/prs'),
   CodeReview   = require('../src/CodeReview'),
@@ -11,23 +12,24 @@ var path       = require('path'),
   schedule     = require('node-schedule');
 
 /**
- * Tests the following features of Alleybot
- * - Turning the URL of a pull request on GitHub into a code review slug
- * - Flushing the room queues
- * - Adding a CR to an empty queue
- * - Not duplicating a CR in the same queue
- * - Allowing the same CR to be added in different room queues
- * - claiming the oldest CR in the queue ('on it')
- * - claiming a specific CR by slug ('on repo/123')
- * - tests needed claiming all PRs in the queue ('on *')
- * - remove/ignore newest CR in queue
- * - remove/ignore specific CR by slug
- * - list CRs by status
- * - mark CR as approved via GitHub webhook
- * - mark CR as closed via GitHub webhook
- * - garbage collection
- * NOT THINKING ABOUT RIGHT NOW
- * - code review scoreboard
+ * Tests the following features of code-review
+    Turning the URL of a pull request on GitHub into a code review slug
+    Flushing the room queues
+    Adding a CR to an empty queue
+    Not duplicating a CR in the same queue
+    Allowing the same CR to be added in different room queues
+    claiming the oldest CR in the queue ('on it')
+    claiming a specific CR by slug ('on repo/123')
+    tests needed claiming all PRs in the queue ('on *')
+    remove/ignore newest CR in queue
+    remove/ignore specific CR by slug
+    list CRs by status
+    mark CR as approved via GitHub webhook
+    mark CR as closed via GitHub webhook
+    garbage collection
+ * TODO:
+    GitHub filetype extra info
+    ...
  */
 
 describe("code-review.coffee", function() {
@@ -43,7 +45,7 @@ describe("code-review.coffee", function() {
   beforeEach(function(done) {
 
     // create new robot, without http, using the mock adapter
-    robot = new Robot(null, "mock-adapter", true, "Alleybot");
+    robot = new Robot(null, "mock-adapter", true, "hubot");
 
     robot.adapter.on("connected", function() {
 
@@ -56,7 +58,8 @@ describe("code-review.coffee", function() {
       });
 
       // load the module
-      code_reviews = require("../scripts/code-reviews")(robot);
+      code_reviews = require("../src/code-reviews")(robot);
+
       adapter = robot.adapter;
       // start each test with an empty queue
       code_reviews.flush_queues();
@@ -91,7 +94,7 @@ describe("code-review.coffee", function() {
       addNewCR(url, {room: rooms[Math.floor(Math.random()*rooms.length)]});
     });
     expect(Object.keys(code_reviews.room_queues).length).toBeGreaterThan(0);
-    // give Redis 50ms to update
+    // give Redis 100ms to update
     setTimeout(function() {
       expect(Object.keys(robot.brain.data.code_reviews.room_queues).length).toBeGreaterThan(0);
       code_reviews.flush_queues();
@@ -122,7 +125,7 @@ describe("code-review.coffee", function() {
       expect(code_reviews.room_queues[rooms[0]].length).toEqual(1);
       expect(code_reviews.room_queues[rooms[0]][0].url).toEqual("https://github.com/alleyinteractive/bayarea/pull/71");
 
-      // alleybot replies as expected
+      // hubot replies as expected
       expect(strings[0]).toMatch(re);
       done();
     });
@@ -152,9 +155,9 @@ describe("code-review.coffee", function() {
     });
 
     // try to add the CR again a few times
-    sendMessageAsync(currentUser, url, 100);
-    sendMessageAsync(currentUser, url, 200);
-    sendMessageAsync(currentUser, url, 300);
+    util.sendMessageAsync(adapter, currentUser, url, 100);
+    util.sendMessageAsync(adapter, currentUser, url, 200);
+    util.sendMessageAsync(adapter, currentUser, url, 300);
   });
 
   it('will allow the same CR in a different room', function(done) {
@@ -181,7 +184,7 @@ describe("code-review.coffee", function() {
 
     // add the CR again in a different room
     currentUser.room = 'a_different_room';
-    sendMessageAsync(currentUser, url, 300);
+    util.sendMessageAsync(adapter, currentUser, url, 300);
   });
 
   it('claims the first CR added to the queue', function(done) {
@@ -218,7 +221,7 @@ describe("code-review.coffee", function() {
     });
 
     // wait for all the CRs to be added, then test
-    sendMessageAsync(reviewer, 'on it', 300);
+    util.sendMessageAsync(adapter, reviewer, 'on it', 300);
   });
 
   it('claims specific CR from queue', function(done) {
@@ -246,7 +249,7 @@ describe("code-review.coffee", function() {
     });
 
     // claim the CR
-    sendMessageAsync(reviewer, 'on ' + slug, 300);
+    util.sendMessageAsync(adapter, reviewer, 'on ' + slug, 300);
   });
 
   it('resets a PR', function(done) {
@@ -256,30 +259,26 @@ describe("code-review.coffee", function() {
     });
 
     // be unspecific
-    sendMessageAsync(users[1], 'unclaim', 1, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[1], 'unclaim', 1, function(envelope, strings) {
       expect(strings[0]).toBe('Sorry, can you be more specific?');
     });
 
     // claim a CR
-    sendMessageAsync(users[0], 'on bayarea/71', 1, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[0], 'on bayarea/71', 1, function(envelope, strings) {
       expect(code_reviews.room_queues.test_room[2].status).toBe('claimed');
       expect(code_reviews.room_queues.test_room[2].reviewer).toBe(users[0].name);
-      // user should have a point
-      expect(code_reviews.scores_for_user(users[0].name).give).toBe(1);
     });
 
     // be wrong
-    sendMessageAsync(users[0], 'alleybot: reset foo/99', 50, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[0], 'hubot: reset foo/99', 50, function(envelope, strings) {
       expect(strings[0]).toBe("Sorry, I couldn't find any PRs in this room matching `foo/99`.");
     });
 
     // unclaim the CR
-    sendMessageAsync(users[0], 'alleybot: unclaim bayarea/71', 100, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[0], 'hubot: unclaim bayarea/71', 100, function(envelope, strings) {
       expect(code_reviews.room_queues.test_room[2].status).toBe('new');
       expect(code_reviews.room_queues.test_room[2].reviewer).toBe(false);
       expect(strings[0]).toBe("You got it, I've unclaimed *bayarea/71* in the queue.");
-      // user should lose a point
-      expect(code_reviews.scores_for_user(users[0].name).give).toBe(0);
       done();
     });
 
@@ -290,17 +289,15 @@ describe("code-review.coffee", function() {
     addNewCR(PullRequests[0], null, 1);
 
     // user claims the CR
-    sendMessageAsync(users[1], 'on guggenheim/378', 1, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[1], 'on guggenheim/378', 1, function(envelope, strings) {
       // should be claimed by that user
       expect(code_reviews.room_queues.test_room[0].status).toBe('claimed');
       expect(code_reviews.room_queues.test_room[0].reviewer).toBe(users[1].name);
-      expect(code_reviews.scores_for_user(users[1].name).give).toBe(1);
 
       // "redo" should reset the CR without decrementing user's score
-      sendMessageAsync(users[1], 'alleybot: redo guggenheim/378', 1, function(envelope, strings) {
+      util.sendMessageAsync(adapter, users[1], 'hubot: redo guggenheim/378', 1, function(envelope, strings) {
         expect(code_reviews.room_queues.test_room[0].status).toBe('new');
         expect(code_reviews.room_queues.test_room[0].reviewer).toBe(false);
-        expect(code_reviews.scores_for_user(users[1].name).give).toBe(1);
         expect(strings[0]).toBe("You got it, guggenheim/378 is ready for a new review.");
         done();
       });
@@ -317,39 +314,39 @@ describe("code-review.coffee", function() {
     code_reviews.room_queues.test_room[0].status = 'approved';
 
     // 0 matches
-    sendMessageAsync(users[7], 'on foobar', 50, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[7], 'on foobar', 50, function(envelope, strings) {
       expect(strings[0]).toBe("Sorry, I couldn't find any new PRs in this room matching `foobar`.");
     });
 
     // multiple unclaimed matches
-    sendMessageAsync(users[7], 'on voice', 100, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[7], 'on voice', 100, function(envelope, strings) {
       expect(strings[0]).toBe("You're gonna have to be more specific: `europeanvoice/558`, or `europeanvoice/559`?");
     });
 
     // 1 match, unclaimed
-    sendMessageAsync(users[7], 'on 559', 300, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[7], 'on 559', 300, function(envelope, strings) {
       expect(strings[0]).toBe('Thanks, ' + users[7].name + '! I removed *europeanvoice/559* from the code review queue.');
     });
 
     // 1 match, claimed
-    sendMessageAsync(users[8], 'on 559', 500, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[8], 'on 559', 500, function(envelope, strings) {
       var bothResponses = new RegExp("Sorry, I couldn't find any new PRs in this room matching `559`."
         + "|It looks like \\*europeanvoice\/559\\* \\(@[a-zA-Z]+\\) has already been claimed");
       expect(strings[0]).toMatch(bothResponses);
     });
 
     // multiple matches, only 1 is unclaimed
-    sendMessageAsync(users[8], 'on voice', 700, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[8], 'on voice', 700, function(envelope, strings) {
       expect(strings[0]).toBe('Thanks, ' + users[8].name + '! I removed *europeanvoice/558* from the code review queue.');
     });
 
     // multiple matches, all claimed
-    sendMessageAsync(users[8], 'on voice', 800, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[8], 'on voice', 800, function(envelope, strings) {
       expect(strings[0]).toBe("Sorry, I couldn't find any new PRs in this room matching `voice`.");
     });
 
     // matches CR that was updated (e.g. by webhook) before it was claimed
-    sendMessageAsync(users[8], 'on photon', 1000, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[8], 'on photon', 1000, function(envelope, strings) {
       var theCr = code_reviews.room_queues.test_room[0];
       var bothResponses = new RegExp("Sorry, I couldn't find any new PRs in this room matching `photon`."
         + "|It looks like \\*" + theCr.slug + '\\* \\(@' + theCr.user.name + '\\) has already been ' + theCr.status);
@@ -373,7 +370,7 @@ describe("code-review.coffee", function() {
 
 
     var responsesReceived = 0;
-    sendMessageAsync(users[0], 'on *', 1000, function(envelope, strings) {
+    util.sendMessageAsync(adapter, users[0], 'on *', 1000, function(envelope, strings) {
       if (responsesReceived === 0) {
         expect(strings[0]).toMatch(/:tornado2?:/);
       } else {
@@ -398,7 +395,7 @@ describe("code-review.coffee", function() {
       expect(roomStatusCount('second_room', 'claimed')).toBe(1);
       users[3].room = 'second_room';
       responsesReceived = 0;
-      sendMessageAsync(users[3], 'on *', 1000, function(envelope, strings) {
+      util.sendMessageAsync(adapter, users[3], 'on *', 1000, function(envelope, strings) {
         responsesReceived++
         if (responsesReceived === 3) { // 3 = :tornado2: + 2 unclaimed reviews
           expect(roomStatusCount('second_room', 'new')).toBe(0);
@@ -415,7 +412,7 @@ describe("code-review.coffee", function() {
       // we received a message when we shouldn't have
       receivedMessage = true;
     });
-    sendMessageAsync(users[0], 'working on staff');
+    util.sendMessageAsync(adapter, users[0], 'working on staff');
 
     setTimeout(function() {
       expect(receivedMessage).toBe(false);
@@ -435,7 +432,7 @@ describe("code-review.coffee", function() {
         clearInterval(addCrsInterval);
         expect(code_reviews.room_queues.test_room[0].slug).toBe('photonfill/18');
         // ignore newest CR
-        sendMessageAsync(users[8], 'alleybot ignore', 1, function(envelope, strings) {
+        util.sendMessageAsync(adapter, users[8], 'hubot ignore', 1, function(envelope, strings) {
           expect(code_reviews.room_queues.test_room.length).toBe(PullRequests.length - 1);
           expect(code_reviews.room_queues.test_room[0].slug).toBe('europeanvoice/558');
           done();
@@ -467,10 +464,10 @@ describe("code-review.coffee", function() {
     });
 
     // ignore a couple specific crs
-    sendMessageAsync(reviewer, 'ignore europeanvoice/559', 100, function(envelope, strings) {
+    util.sendMessageAsync(adapter, reviewer, 'ignore europeanvoice/559', 100, function(envelope, strings) {
       expect(strings[0]).toBe('Sorry for eavesdropping. I removed *europeanvoice/559* from the queue.');
     });
-    sendMessageAsync(reviewer, 'ignore newgta', 400, function(envelope, strings) {
+    util.sendMessageAsync(adapter, reviewer, 'ignore newgta', 400, function(envelope, strings) {
       expect(strings[0]).toBe('Sorry for eavesdropping. I removed *newgta/567* from the queue.');
       done();
     });
@@ -487,7 +484,7 @@ describe("code-review.coffee", function() {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
-      // that alleybot sent back only contains CRs with the correct status
+      // that hubot sent back only contains CRs with the correct status
       code_reviews.room_queues.test_room.forEach(function(cr, i) {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
         var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
@@ -499,7 +496,7 @@ describe("code-review.coffee", function() {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "alleybot list all crs"));
+      adapter.receive(new TextMessage(users[8], "hubot list all crs"));
   });
 
   it('lists new CRs', function(done) {
@@ -513,7 +510,7 @@ describe("code-review.coffee", function() {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
-      // that alleybot sent back only contains CRs with the correct status
+      // that hubot sent back only contains CRs with the correct status
       code_reviews.room_queues.test_room.forEach(function(cr, i) {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
         var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
@@ -525,7 +522,7 @@ describe("code-review.coffee", function() {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "alleybot list new crs"));
+      adapter.receive(new TextMessage(users[8], "hubot list new crs"));
   });
 
   it('lists claimed CRs', function(done) {
@@ -539,7 +536,7 @@ describe("code-review.coffee", function() {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
-      // that alleybot sent back only contains CRs with the correct status
+      // that hubot sent back only contains CRs with the correct status
       code_reviews.room_queues.test_room.forEach(function(cr, i) {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
         var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
@@ -551,7 +548,7 @@ describe("code-review.coffee", function() {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "alleybot list claimed crs"));
+      adapter.receive(new TextMessage(users[8], "hubot list claimed crs"));
   });
 
   it('lists approved CRs', function(done) {
@@ -565,7 +562,7 @@ describe("code-review.coffee", function() {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
-      // that alleybot sent back only contains CRs with the correct status
+      // that hubot sent back only contains CRs with the correct status
       code_reviews.room_queues.test_room.forEach(function(cr, i) {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
         var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
@@ -577,7 +574,7 @@ describe("code-review.coffee", function() {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "alleybot list approved crs"));
+      adapter.receive(new TextMessage(users[8], "hubot list approved crs"));
   });
 
   it('lists closed CRs', function(done) {
@@ -591,7 +588,7 @@ describe("code-review.coffee", function() {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
-      // that alleybot sent back only contains CRs with the correct status
+      // that hubot sent back only contains CRs with the correct status
       code_reviews.room_queues.test_room.forEach(function(cr, i) {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
         var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
@@ -603,7 +600,7 @@ describe("code-review.coffee", function() {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "alleybot list closed crs"));
+      adapter.receive(new TextMessage(users[8], "hubot list closed crs"));
   });
 
   it('lists merged CRs', function(done) {
@@ -617,7 +614,7 @@ describe("code-review.coffee", function() {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
-      // that alleybot sent back only contains CRs with the correct status
+      // that hubot sent back only contains CRs with the correct status
       code_reviews.room_queues.test_room.forEach(function(cr, i) {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
         var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
@@ -629,7 +626,7 @@ describe("code-review.coffee", function() {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "alleybot list merged crs"));
+      adapter.receive(new TextMessage(users[8], "hubot list merged crs"));
   });
 
   it('includes timeago information when listing crs', function(done) {
@@ -654,7 +651,7 @@ describe("code-review.coffee", function() {
       expect(crsList[5]).toMatch(/Here's a list of all code reviews for you.$/);
       done();
       });
-      adapter.receive(new TextMessage(users[0], "alleybot list all crs"));
+      adapter.receive(new TextMessage(users[0], "hubot list all crs"));
   });
 
   it('recognizes strings containing emoji', function(done) {
@@ -743,7 +740,7 @@ describe("code-review.coffee", function() {
   it('does not approve a CR when GitHub comment does not contain emoji', function(done) {
     testCommentText({
       comment: 'This needs more work, sorry.',
-      expectedRes: 'issue_comment did not approve ',
+      expectedRes: 'issue_comment did not yet approve ',
       expectedStatus: 'new'
     }, done);
   });
@@ -882,7 +879,7 @@ describe("code-review.coffee", function() {
    */
   function testWebhook(eventType, requestBody, callback) {
   request(robot.router.listen())
-    .post('/alleybot/cr-comment')
+    .post('/hubot/cr-comment')
     .set({
       'Content-Type' : 'application/json',
       'X-Github-Event' : eventType,
@@ -970,7 +967,7 @@ describe("code-review.coffee", function() {
    * @param int randExclude Optional index in users array to exclude from submitters
    */
   function addNewCR(url, userMeta, randExclude) {
-    var submitter = getRandom(users, randExclude).value;
+    var submitter = util.getRandom(users, randExclude).value;
     if (userMeta) {
       // shallow "extend" submitter
       Object.keys(userMeta).forEach(function(key) {
@@ -978,32 +975,6 @@ describe("code-review.coffee", function() {
       });
     }
     code_reviews.add(new CodeReview(submitter, makeSlug(url), url));
-  }
-
-  /**
-   * get a random item from an array
-   * @param src array Source array to get a random element from
-   * @param int exclude Optional index in array to exclude
-   * @return misc Array element
-   */
-  function getRandom(src, exclude) {
-    if (typeof exclude === 'undefined') {
-      exclude = -1;
-    }
-
-    // if random index in the excluded index, adjust up or down
-    var randIndex = Math.floor(Math.random() * src.length);
-    if (exclude === randIndex) {
-      if(randIndex === 0) {
-        randIndex++;
-      } else {
-        randIndex--;
-      }
-    }
-    return {
-      value: src[randIndex],
-      index: randIndex
-    };
   }
 
   /**
@@ -1048,36 +1019,5 @@ describe("code-review.coffee", function() {
         statuses[status].push(code_reviews.room_queues.test_room[i].slug);
       }
     });
-
-  }
-
-  /**
-   * use setTimeout to send a message asynchronously
-   * this gives Redis time to update, etc
-   * @param object user Hubot user object
-   * @param string text Text of message
-   * @param int delay Optional delay for setTimeout, defaults to 1ms
-   * @param function callback Optional callback that can contain one or more assertions.
-   *                          Do not use if the same user sends the same message multiple times in one test!
-   */
-  function sendMessageAsync(user, text, delay, callback) {
-    if (typeof delay === 'undefined' || delay <= 0) {
-      delay = 1;
-    }
-
-    var messageId = [user.room, user.name, text, delay].join('-');
-    messageId = messageId.replace(/\s+/g,'');
-
-    if (typeof callback == 'function') {
-      adapter.on('send', function(envelope, strings) {
-        if (envelope.message.id === messageId) {
-          callback(envelope, strings);
-        }
-      });
-    }
-
-    setTimeout(function() {
-      adapter.receive(new TextMessage(user, text, messageId));
-    }, delay);
   }
 });

@@ -12,7 +12,6 @@ EmojiDataParser = require './lib/EmojiDataParser'
 class CodeReviews
   constructor: (@robot) ->
     @room_queues = {}
-    @scores = {}
     @current_timeout = null
     @reminder_count = 0
     @emoji_regex = /(\:[a-z0-9_\-\+]+\:)/mi
@@ -32,7 +31,6 @@ class CodeReviews
       if @robot.brain.data.code_reviews
         cache = @robot.brain.data.code_reviews
         @room_queues = cache.room_queues || {}
-        @scores = cache.scores || {}
         @set_help_text()
         @collect_garbage()
         unless Object.keys(@room_queues).length is 0
@@ -58,10 +56,10 @@ class CodeReviews
             @garbage_last_collection++
     console.log "CodeReviews.collect garbage found #{@garbage_last_collection} items"
 
-  # Update Redis store of CR queues and karma scores
+  # Update Redis store of CR queues
   # @return none
   update_redis: ->
-    @robot.brain.data.code_reviews = { room_queues: @room_queues, scores: @scores, help_text: @help_text }
+    @robot.brain.data.code_reviews = { room_queues: @room_queues, help_text: @help_text }
 
   # Set help text and update Redis with 12 hour lifespan
   # @param string text Text of `help crs` response

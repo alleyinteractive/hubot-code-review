@@ -29,7 +29,8 @@ module.exports = (robot) ->
 
     robot.respond /what (?:is|are) (\w+)(?:'s?)? cr scores?\??/i, (msg) ->
       if 'my' is msg.match[1].toLowerCase()
-        user = msg.message.user.name
+        # Handle case of msg using user (unit test) vs. user.name (slack adapter)
+        user = if (msg.message.user.name)? then msg.message.user.name else msg.message.user
       else
         user = msg.match[1]
 
@@ -39,9 +40,8 @@ module.exports = (robot) ->
     robot.respond /remove ([-_a-z0-9]+) from cr rankings/i, (msg) ->
       user = msg.match[1]
       scores = code_review_karma.scores_for_user user
-      msg.send "Removing #{user}, who currently has received #{scores.take} reviews and given #{scores.give}..."
       if code_review_karma.remove_user user
-        msg.send "I removed #{user} from the CR rankings"
+        msg.send "Removing #{user}, who currently has received #{scores.take} reviews and given #{scores.give}..."
       else
         msg.send "I could not remove #{user} from the CR rankings"
 
@@ -61,3 +61,6 @@ module.exports = (robot) ->
         msg.send "#{new_user} has now received #{new_scores.take} reviews and given #{new_scores.give}. Code karma: #{code_review_karma.karma(new_scores.give, new_scores.take)}"
       else
         msg.send "I could not remove #{user} from the CR rankings"
+
+  # return for use in unit tests
+  return code_review_karma

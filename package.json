@@ -40,13 +40,13 @@
     "githubot": "^1.0.0",
     "moment": "^2.8.3",
     "node-schedule": "^1.0.0",
+    "hubot-redis-brain": "^0.0.3",
 
     "punycode": "^2.0.1"
   },
   "peerDependencies": {
     "hubot-slack": "^4.3.1",
-    "hubot": "^2.17.0",
-    "hubot-redis-brain": "^0.0.3"
+    "hubot": "^2.17.0"
   },
   "engines": {
     "node": "6.x"

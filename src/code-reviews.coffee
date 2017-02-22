@@ -7,8 +7,6 @@
 # Commands:
 #   hubot help crs - display code review help
 
-
-Path  = require 'path'
 CodeReviews = require './CodeReviews'
 CodeReview = require './CodeReview'
 CodeReviewKarma = require './CodeReviewKarma'
@@ -97,7 +95,6 @@ module.exports = (robot) ->
   @command  {GitHub pull request URL} [@user]
   @desc     Add PR to queue and (optionally) notify @user or #channel
   ###
-  robot.hear /.*(?:code review|\b[cp]r\b).*(https?:\/\/github.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+))\/?(\s+[#|@]?[0-9a-z_-]+)?\s*$/i, enqueue_code_review
   robot.hear code_reviews.pr_url_regex, enqueue_code_review
 
   ###
@@ -153,7 +150,6 @@ module.exports = (robot) ->
       if (cr)?
         response = "It looks like *#{cr.slug}* (@#{cr.user.name}) has already been #{cr.status}"
         msg.send response
-
 
   ###
   @command (nm|ignore) cool-repo/123
@@ -257,7 +253,7 @@ module.exports = (robot) ->
         code_reviews.approve_cr_by_url req.body.issue.html_url, req.body.comment.user.login, req.body.comment.body
         response = "issue_comment approved #{req.body.issue.html_url}"
       else
-        response = "issue_comment did not approve #{req.body.issue.html_url}"
+        response = "issue_comment did not yet approve #{req.body.issue.html_url}"
     # Check if PR was merged or closed
     else if req.headers['x-github-event'] is 'pull_request'
       if req.body.action is 'closed'
@@ -280,7 +276,7 @@ module.exports = (robot) ->
         response = "pull_request_review approved #{req.body.pull_request.html_url}"
         code_reviews.approve_cr_by_url req.body.pull_request.html_url, req.body.review.user.login, req.body.review.body
       else
-        response = "pull_request_review did not approve #{req.body.review.html_url}"
+        response = "pull_request_review did not yet approve #{req.body.review.html_url}"
     else
       res.statusCode = 400
       response = "invalid x-github-event #{req.headers['x-github-event']}"
