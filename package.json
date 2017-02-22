@@ -20,7 +20,7 @@
   "homepage": "https://github.com/alleyinteractive/hubot-code-review",
   "scripts": {
     "test": "node_modules/.bin/jasmine-node --verbose --coffee --color --forceexit test/",
-    "lint": "node_modules/.bin/coffeelint scripts/"
+    "lint": "node_modules/.bin/coffeelint src/"
   },
   "contributors": [
     {
