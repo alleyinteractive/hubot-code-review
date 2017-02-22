@@ -1,16 +1,6 @@
-// Allows 'since' custom messages for unit test failures
-require('jasmine-custom-message');
-
-var path       = require('path'),
-  Robot        = require('../node_modules/hubot/src/robot'),
-  TextMessage  = require('../node_modules/hubot/src/message').TextMessage,
-  util         = require('./lib/util');
-  Users        = require('./data/users'),
-  PullRequests = require('./data/prs'),
-  CodeReview   = require('../src/CodeReview'),
-  request      = require('supertest');
-  schedule     = require('node-schedule');
-
+const Robot = require('../node_modules/hubot/src/robot');
+const util = require('./lib/util');
+const Users = require('./data/users');
 
 /**
  * Tests the following features of code-review-karma
@@ -25,7 +15,7 @@ var path       = require('path'),
     leaderboard
  */
 
-describe("code-review-karma.coffee", function() {
+describe('code-review-karma.coffee', function() {
   var robot;
   var adapter;
   var code_review_karma;
