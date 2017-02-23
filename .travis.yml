@@ -1,0 +1,27 @@
+sudo: false
+
+branches:
+  only:
+    - master
+
+language: node_js
+
+node_js:
+  - "6"
+
+services:
+  - redis-server
+
+notifications:
+  email: false
+
+install:
+    - npm install
+
+cache:
+  directories:
+    - node_modules
+
+script:
+    - npm run lint
+    - npm run test
