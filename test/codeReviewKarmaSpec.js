@@ -17,7 +17,7 @@ const Users = require('./data/users');
     leaderboard
  */
 
-describe('code-review-karma.coffee', () => {
+describe('Code Review Karma', () => {
   let robot = {};
   let adapter = {};
   let codeReviewKarma = {};

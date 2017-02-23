@@ -29,18 +29,29 @@ module.exports = (robot) ->
         # 'Take' a code review for karma
         code_review_karma.incr_score msg.message.user.name, 'take'
 
-        notification_string = if (msg.match[5])? and msg.match[5].length then msg.match[5].replace /^\s+|\s+$/g, "" else null
+        if (msg.match[5])? and msg.match[5].length
+          notification_string = msg.match[5].replace /^\s+|\s+$/g, ""
+        else
+          notification_string = null
         # Add any extra info to the cr, seng extra notifications, and add it to the room_queue
         code_reviews.add_cr_with_extra_info(cr, msg, notification_string)
 
       else
-        statusMsg = if code_reviews.room_queues[msgRoomName(msg)][found].status != 'new' then "#{code_reviews.room_queues[msgRoomName(msg)][found].status}" else 'added'
-        reviewerMsg = if code_reviews.room_queues[msgRoomName(msg)][found].reviewer then " and was #{statusMsg} by @#{code_reviews.room_queues[msgRoomName(msg)][found].reviewer}" else ''
+        if code_reviews.room_queues[msgRoomName(msg)][found].status != 'new'
+          statusMsg = "#{code_reviews.room_queues[msgRoomName(msg)][found].status}"
+        else
+          statusMsg = 'added'
+        if code_reviews.room_queues[msgRoomName(msg)][found].reviewer
+          reviewerMsg = " and was #{statusMsg} by" +
+          " @#{code_reviews.room_queues[msgRoomName(msg)][found].reviewer}"
+        else
+          reviewerMsg = ''
         msg.send "*#{slug}* is already in the queue#{reviewerMsg}"
     else
       msg.send "Error adding #{url} to queue"
 
   # Respond to message with matching slug names
+  #
   # @param slugs matching slugs
   # @param msg message to reply to
   # @return none
@@ -52,6 +63,7 @@ module.exports = (robot) ->
     msg.send "You're gonna have to be more specific: " + slugs.join(', ') + '?'
 
   # Return a single matching CR for slug match or alert the user to match status
+  #
   # @param slugs matching slugs
   # @param msg message to reply to
   # @return none
@@ -63,7 +75,8 @@ module.exports = (robot) ->
     if found_crs.length is 0
       unless no_reply
         status_prs = if status then "#{status} " else ''
-        msg.send "Sorry, I couldn't find any #{status_prs}PRs in this room matching `#{slug_to_search_for}`."
+        msg.send "Sorry, I couldn't find any #{status_prs}PRs" +
+        " in this room matching `#{slug_to_search_for}`."
       return
     # multiple matches
     else if found_crs.length > 1
@@ -132,7 +145,7 @@ module.exports = (robot) ->
   @command [userName is ]on cool
   @desc    Claim a _new_ PR whose slug matches `cool`
   ###
-  robot.hear /^(?:([-_a-z0-9]+) is )?(?:reviewing|on) ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+)$/i, (msg) ->
+  robot.hear /^(?:([-_a-z0-9]+) is )?(?:on) ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+)$/i, (msg) ->
     reviewer = msg.match[1] or msg.message.user.name
     slug = msg.match[2]
     return if slug.toLowerCase() is 'it'
@@ -249,10 +262,29 @@ module.exports = (robot) ->
 
     # Check if PR was approved (via emoji in issue_comment body)
     if req.headers['x-github-event'] is 'issue_comment'
-      if code_reviews.emoji_regex.test(req.body.comment.body) or code_reviews.emoji_unicode_test(req.body.comment.body)
-        code_reviews.approve_cr_by_url req.body.issue.html_url, req.body.comment.user.login, req.body.comment.body
-        response = "issue_comment approved #{req.body.issue.html_url}"
+      if ((process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE?) and
+      process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE)
+        if code_reviews.emoji_regex.test(req.body.comment.body) or
+        code_reviews.emoji_unicode_test(req.body.comment.body)
+          code_reviews.approve_cr_by_url(
+            req.body.issue.html_url,
+            req.body.comment.user.login,
+            req.body.comment.body
+          )
+          response = "issue_comment approved #{req.body.issue.html_url}"
+        else
+          code_reviews.comment_cr_by_url(
+            req.body.issue.html_url,
+            req.body.comment.user.login,
+            req.body.comment.body
+          )
+          response = "issue_comment did not yet approve #{req.body.issue.html_url}"
       else
+        code_reviews.comment_cr_by_url(
+          req.body.issue.html_url,
+          req.body.comment.user.login,
+          req.body.comment.body
+        )
         response = "issue_comment did not yet approve #{req.body.issue.html_url}"
     # Check if PR was merged or closed
     else if req.headers['x-github-event'] is 'pull_request'
@@ -270,13 +302,23 @@ module.exports = (robot) ->
           response = "#{req.body.pull_request.html_url} not found in any queue"
       else
         response = "#{req.body.pull_request.html_url} is still open"
+
     # Check if PR was approved via GitHub's Pull Request Review
     else if req.headers['x-github-event'] is 'pull_request_review'
-      if req.body.state is 'approved'
+      if req.body.review.state is 'approved'
         response = "pull_request_review approved #{req.body.pull_request.html_url}"
-        code_reviews.approve_cr_by_url req.body.pull_request.html_url, req.body.review.user.login, req.body.review.body
+        code_reviews.approve_cr_by_url(
+          req.body.pull_request.html_url,
+          req.body.review.user.login,
+          req.body.review.body
+        )
       else
-        response = "pull_request_review did not yet approve #{req.body.review.html_url}"
+        code_reviews.comment_cr_by_url(
+          req.body.pull_request.html_url,
+          req.body.review.user.login,
+          req.body.review.body
+        )
+        response = "pull_request_review not yet approved #{req.body.pull_request.html_url}"
     else
       res.statusCode = 400
       response = "invalid x-github-event #{req.headers['x-github-event']}"

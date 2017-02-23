@@ -6,7 +6,8 @@
 #
 # Configuration:
 #   HUBOT_GITHUB_TOKEN
-#   HUBOT_CODE_REVIEW_KARMA_DISABLED (if set, disable karma functionality)
+#   HUBOT_CODE_REVIEW_KARMA_DISABLED (if true, disable karma functionality)
+#   HUBOT_CODE_REVIEW_EMOJI_APPROVE (if true, approve CRs with emojis in the comment)
 #
 # Commands:
 #   hubot help crs - display code review help

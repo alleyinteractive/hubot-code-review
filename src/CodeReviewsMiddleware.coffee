@@ -1,6 +1,7 @@
 module.exports = (robot) ->
   robot.listenerMiddleware (context, next, done) ->
-    unless context.response.message.text and context.response.message.text.indexOf('help crs') isnt -1
+    unless context.response.message.text and
+    context.response.message.text.indexOf('help crs') isnt -1
       next()
     else
       # disable default `hubot help <query>` response when requesting `hubot help crs`

@@ -19,7 +19,7 @@
   ],
   "homepage": "https://github.com/alleyinteractive/hubot-code-review",
   "scripts": {
-    "test": "node_modules/.bin/jasmine-node --verbose --coffee --color --forceexit test/",
+    "test": "HUBOT_CODE_REVIEW_EMOJI_APPROVE=true node_modules/.bin/jasmine-node --verbose --coffee --color --forceexit test/",
     "lint": "node_modules/.bin/coffeelint src/",
     "lint-tests": "eslint -c .eslintrc --ext .js ./test"
   },
