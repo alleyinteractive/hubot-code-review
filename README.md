@@ -1,2 +1,6 @@
 # hubot-code-review
-Code Review via hubot
+hubot script for GitHub code review on Slack
+
+## Todo
+
+Document

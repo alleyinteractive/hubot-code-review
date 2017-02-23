@@ -1,10 +1,12 @@
+/*eslint-env jasmine*/
+
 // Allows 'since' custom messages for unit test failures
 require('jasmine-custom-message');
 
 var path       = require('path'),
   Robot        = require('../node_modules/hubot/src/robot'),
   TextMessage  = require('../node_modules/hubot/src/message').TextMessage,
-  util         = require('./lib/util');
+  util         = require('./lib/util'),
   Users        = require('./data/users'),
   PullRequests = require('./data/prs'),
   CodeReview   = require('../src/CodeReview'),
