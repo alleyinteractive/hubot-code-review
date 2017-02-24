@@ -10,12 +10,12 @@ A Hubot script for GitHub code review on Slack.
 ## tldr;
 
 Drop a GitHub pull request url into a room, and Hubot adds the pull request
-to the room's queue (each room has its own queue)
+to the room's queue (each room has its own queue)...
 
 ![](/docs/images/submit-pr.png)
 
 Every 5 minutes, Hubot reports the current code review queue to the room (after an hour of
-no interaction, it messages @here with a warning and switches to hourly reminders)
+no interaction, it messages @here with a warning and switches to hourly reminders)...
 
 ![](/docs/images/remind-pr.png)
 
@@ -65,11 +65,11 @@ To enable the script, add the hubot-code-review entry to the external-scripts.js
 Code review queuing and notifications will work out of the box, but magic like
 file type lookups or DMs when your PR is approved/rejected require 2 things:
 
-1) Creating a `hubot-code-review` webhook in GitHub so that Hubot can notice any changes
+1) **Create a `hubot-code-review` webhook in GitHub so that Hubot can notice any changes**
 
 - [GitHub webhook instructions for hubot-code-review](/docs/github-webhook.md)
 
-2) Setting Environmental variables:
+2) **Set Environmental variables:**
 
 - If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type
 information on PR submission. Check out the instructions for configuring
@@ -106,10 +106,10 @@ _Note that some commands require direct @hubot, some don't, and some work either
 
 *Code review statuses*
 
-	new		PR has just been added to the queue, no one is on it.
-	claimed	Someone is on this PR
+	new			PR has just been added to the queue, no one is on it.
+	claimed		Someone is on this PR
 	approved	PR received a comment containing at least one emoji. Requires GitHub webhook.
-	merged	PR was merged and closed. Requires GitHub webhook.
-	closed	PR was closed without merging. Requires GitHub webhook.
+	merged		PR was merged and closed. Requires GitHub webhook.
+	closed		PR was closed without merging. Requires GitHub webhook.
 
 
