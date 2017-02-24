@@ -178,7 +178,7 @@ describe("Code Review Emoji Approval", () => {
    */
   function testWebhook(eventType, requestBody, callback) {
   request(robot.router.listen())
-    .post('/hubot/cr-comment')
+    .post('/hubot/hubot-code-review')
     .set({
       'Content-Type' : 'application/json',
       'X-Github-Event' : eventType,
