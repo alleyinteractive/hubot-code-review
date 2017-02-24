@@ -253,7 +253,7 @@ module.exports = (robot) ->
       msg.send code_reviews.queues_debug_room(msg.match[1])
 
   # Mark a CR as approved or closed when webhook received from GitHub
-  robot.router.post '/hubot/cr-comment', (req, res) ->
+  robot.router.post '/hubot/hubot-code-review', (req, res) ->
     # check header
     unless req.headers['x-github-event']
       res.statusCode = 400

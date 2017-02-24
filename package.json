@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "private": true,
   "author": "Alley Interactive <ops+hubot@alleyinteractive.com>",
-  "description": "hubot script for GitHub code review on Slack",
+  "description": "A Hubot script for GitHub code review on Slack",
   "main": "index.coffee",
   "repository": {
     "type": "git",
@@ -23,20 +23,6 @@
     "lint": "node_modules/.bin/coffeelint src/",
     "lint-tests": "eslint -c .eslintrc --ext .js ./test"
   },
-  "contributors": [
-    {
-      "name": "Benjamin Bolton",
-      "url": "https://github.com/benpbolton"
-    },
-    {
-      "name": "Matthew Boynes",
-      "url": "https://github.com/mboynes"
-    },
-    {
-      "name": "Josh Kadis",
-      "url": "https://github.com/joshkadis"
-    }
-  ],
   "dependencies": {
     "githubot": "^1.0.0",
     "moment": "^2.8.3",
