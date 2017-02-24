@@ -165,12 +165,12 @@ module.exports = (robot) ->
         msg.send response
 
   ###
-  @command (nm|ignore) cool-repo/123
+  @command hubot (nm|ignore) cool-repo/123
   @desc    Delete `cool-repo/123` from queue regardless of status
-  @command (nm|ignore) cool
+  @command hubot (nm|ignore) cool
   @desc    Delete most recently added PR whose slug matches `cool` regardless of status
   ###
-  robot.hear /^(?:nm|ignore) ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+)$/i, (msg) ->
+  robot.respond /(?:nm|ignore) ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+)$/i, (msg) ->
     slug = msg.match[1]
     return if slug.toLowerCase() is 'it'
 

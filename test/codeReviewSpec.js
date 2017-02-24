@@ -91,7 +91,7 @@ describe("Code Review", () => {
   });
 
   it('flushes the queues', (done) => {
-    PullRequests.forEach(function(url, i) {
+    PullRequests.forEach((url, i) => {
       var rooms = ['alley', 'codereview', 'learnstuff', 'nycoffice'];
       addNewCR(url, {room: rooms[Math.floor(Math.random()*rooms.length)]});
     });
@@ -192,7 +192,7 @@ describe("Code Review", () => {
   it('claims the first CR added to the queue', (done) => {
     var reviewer = users[2];
     var urlsToAdd = [PullRequests[0], PullRequests[1], PullRequests[2], PullRequests[3]];
-    urlsToAdd.forEach(function(url, i) {
+    urlsToAdd.forEach((url, i) => {
       addNewCR(url, {}, 2);
     });
 
@@ -230,7 +230,7 @@ describe("Code Review", () => {
     var slug = 'wordpress-fieldmanager/559';
     var reviewer = users[9];
     var urlsToAdd = [PullRequests[1], PullRequests[2], PullRequests[3]];
-    urlsToAdd.forEach(function(url, i) {
+    urlsToAdd.forEach((url, i) => {
       addNewCR(url, {}, 9);
     });
 
@@ -256,7 +256,7 @@ describe("Code Review", () => {
 
   it('resets a PR', (done) => {
     // add a bunch of new CRs
-    PullRequests.forEach(function(url, i) {
+    PullRequests.forEach((url, i) => {
       addNewCR(url);
     });
 
@@ -309,7 +309,7 @@ describe("Code Review", () => {
   it('claims a review by searching for its slug', (done) => {
     var reviewer = users[9];
     // add a bunch of new CRs
-    PullRequests.forEach(function(url, i) {
+    PullRequests.forEach((url, i) => {
       addNewCR(url, {}, 9);
     });
     // simulate a PR that was approved and updated by webhook before being claimed from queue
@@ -362,7 +362,7 @@ describe("Code Review", () => {
     // add 7 PR across two rooms
     code_reviews.room_queues.test_room = [];
     code_reviews.room_queues.second_room = [];
-    PullRequests.forEach(function(url, i) {
+    PullRequests.forEach((url, i) => {
       var cr = new CodeReview(users[6], makeSlug(url), url);
       var room = i <= 3 ? 'test_room' : 'second_room';
       code_reviews.room_queues[room].unshift(cr);
@@ -424,7 +424,7 @@ describe("Code Review", () => {
 
   it('ignores the newest CR', (done) => {
     // add a bunch of new CRs
-    PullRequests.forEach(function(url, i) {
+    PullRequests.forEach((url, i) => {
       addNewCR(url);
     });
 
@@ -445,31 +445,31 @@ describe("Code Review", () => {
   });
 
   it('ignores specific CR', (done) => {
-    var reviewer = users[9];
-    var urlsToAdd = [PullRequests[1], PullRequests[2], PullRequests[3]];
-    urlsToAdd.forEach(function(url, i) {
+    const reviewer = users[9];
+    const urlsToAdd = [PullRequests[1], PullRequests[2], PullRequests[3]];
+    urlsToAdd.forEach((url, i) => {
       addNewCR(url, {}, 9);
     });
 
-    adapter.on('send', (envelope, strings) => {
-      var slug = envelope.message.text.match(/ignore (.*)/)[1];
-      slugs_in_the_room = [];
-      for (var i = 0; i < code_reviews.room_queues[reviewer.room].length; i++) {
+    adapter.on('send', (envelope) => {
+      const slug = envelope.message.text.match(/ignore (.*)/)[1];
+      const slugsInRoom = [];
+      for (let i = 0; i < code_reviews.room_queues[reviewer.room].length; i++) {
         // specific slug should be ignored
-        slugs_in_the_room.push(code_reviews.room_queues[reviewer.room][i].slug);
+        slugsInRoom.push(code_reviews.room_queues[reviewer.room][i].slug);
         since('Expect the ignored slug: ' + slug + ' to be gone from the room').
           expect(slug === code_reviews.room_queues[reviewer.room][i].slug).toBe(false);
       }
       // unmentioned slug should still be in the room
-      since("Expected slugs that weren't ignored are still present in the room").
-        expect(slugs_in_the_room.includes('searchpress/23')).toBe(true);
+      since('Expected slugs that weren\'t ignored are still present in the room').
+        expect(slugsInRoom.includes('searchpress/23')).toBe(true);
     });
 
     // ignore a couple specific crs
-    util.sendMessageAsync(adapter, reviewer, 'ignore wordpress-fieldmanager/559', 100, (envelope, strings) => {
+    util.sendMessageAsync(adapter, reviewer, 'hubot ignore wordpress-fieldmanager/559', 100, (envelope, strings) => {
       expect(strings[0]).toBe('Sorry for eavesdropping. I removed *wordpress-fieldmanager/559* from the queue.');
     });
-    util.sendMessageAsync(adapter, reviewer, 'ignore huron', 400, (envelope, strings) => {
+    util.sendMessageAsync(adapter, reviewer, 'hubot ignore huron', 400, (envelope, strings) => {
       expect(strings[0]).toBe('Sorry for eavesdropping. I removed *huron/567* from the queue.');
       done();
     });
@@ -1028,7 +1028,7 @@ describe("Code Review", () => {
       merged: []
     }
     // add a bunch of new CRs
-    PullRequests.forEach(function(url, i) {
+    PullRequests.forEach((url, i) => {
       addNewCR(url);
     });
 

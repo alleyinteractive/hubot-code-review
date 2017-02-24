@@ -94,8 +94,8 @@ and will DM the submitter accordingly.
 	on *                                Claim all _new_ PRs
 	[userName is ]on cool-repo/123      Claim cool-repo/123 if no one else has claimed it
 	[userName is ]on cool               Claim a _new_ PR whose slug matches cool
-	(nm|ignore) cool-repo/123           Delete cool-repo/123 from queue regardless of status
-	(nm|ignore) cool                    Delete most recently added PR whose slug matches cool
+	hubot (nm|ignore) cool-repo/123		Delete cool-repo/123 from queue regardless of status
+	hubot (nm|ignore) cool            	Delete most recently added PR whose slug matches cool
 	hubot (nm|ignore)                   Delete most recently added PR from the queue regardless of status
 	hubot redo cool-repo/123            Allow another review _without_ decrementing previous reviewer's score
 	hubot (unclaim|reset) cool-repo/123 Reset CR status to new/unclaimed _and_ decrement reviewer's score
@@ -108,7 +108,7 @@ _Note that some commands require direct @hubot, some don't, and some work either
 
 	new			PR has just been added to the queue, no one is on it.
 	claimed		Someone is on this PR
-	approved	PR received a comment containing at least one emoji. Requires GitHub webhook.
+	approved	PR was approved. Requires GitHub webhook.
 	merged		PR was merged and closed. Requires GitHub webhook.
 	closed		PR was closed without merging. Requires GitHub webhook.
 
