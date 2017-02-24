@@ -1,8 +1,8 @@
-Configure `HUBOT_GITHUB_TOKEN` for hubot-code-review
+`HUBOT_GITHUB_TOKEN` for hubot-code-review
 ===================
 
 Adding a `HUBOT_GITHUB_TOKEN` environmental variable to hubot-code-review allows Hubot to
-query the GitHub to identify file types when reporting the PR back to the room.
+query GitHub for file type information when reporting the PR back to the room.
 
 ![](/docs/images/remind-pr.png)
 
@@ -25,4 +25,4 @@ Hubot will now identify filetypes included in the PR, saving a curious click-thr
 claiming a PR :)
 
 If you haven't done so already, check out the
-[GitHub webhook instructions for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
+[GitHub webhook instructions for hubot-code-review](/docs/github-webhook.md)
