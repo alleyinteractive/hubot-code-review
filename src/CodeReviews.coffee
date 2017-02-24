@@ -101,7 +101,7 @@ class CodeReviews
     "\n\n*Code review statuses*\n" +
     "`new`\t\tPR has just been added to the queue, no one is on it.\n" +
     "`claimed`\tSomeone is on this PR\n" +
-    "`approved`\tPR received a comment containing at least one emoji. Requires GitHub webhook.\n" +
+    "`approved`\tPR was approved. Requires GitHub webhook.\n" +
     "`merged`\tPR was merged and closed. Requires GitHub webhook.\n" +
     "`closed`\tPR was closed without merging. Requires GitHub webhook.\n"
 
