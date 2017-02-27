@@ -313,11 +313,12 @@ module.exports = (robot) ->
           req.body.review.body
         )
       else
-        code_reviews.comment_cr_by_url(
-          req.body.pull_request.html_url,
-          req.body.review.user.login,
-          req.body.review.body
-        )
+        if req.body.review.body?
+          code_reviews.comment_cr_by_url(
+            req.body.pull_request.html_url,
+            req.body.review.user.login,
+            req.body.review.body
+          )
         response = "pull_request_review not yet approved #{req.body.pull_request.html_url}"
     else
       res.statusCode = 400
