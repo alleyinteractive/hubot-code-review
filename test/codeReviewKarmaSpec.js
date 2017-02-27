@@ -1,4 +1,4 @@
-/*eslint-env jasmine*/
+/* eslint-env jasmine */
 
 const Robot = require('../node_modules/hubot/src/robot');
 const util = require('./lib/util');
@@ -11,10 +11,10 @@ const Users = require('./data/users');
     lists all cr scores
     reports my score
     reports someones else's score
+    displays the leaderboard
  * TODO:
     merge
     remove
-    leaderboard
  */
 
 describe('Code Review Karma', () => {

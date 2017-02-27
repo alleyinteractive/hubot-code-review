@@ -2,7 +2,6 @@ hubot-code-review
 ===================
 
 [![Travis branch](https://img.shields.io/travis/alleyinteractive/hubot-code-review/master.svg?maxAge=2592000)](https://travis-ci.org/alleyinteractive/hubot-code-review)
-[![codecov](https://codecov.io/gh/alleyinteractive/hubot-code-review/branch/master/graph/badge.svg)](https://codecov.io/gh/alleyinteractive/hubot-code-review)
 [![npm (scoped)](https://img.shields.io/npm/v/hubot-code-review.svg?maxAge=2592000)](https://www.npmjs.com/package/hubot-code-review)
 
 A Hubot script for GitHub code review on Slack.
