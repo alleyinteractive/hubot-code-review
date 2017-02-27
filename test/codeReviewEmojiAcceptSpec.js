@@ -75,34 +75,34 @@ describe("Code Review Emoji Approval", () => {
 
   if (process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE) {
     it('receives GitHub webhook to approve a PR by emoji in multiple rooms', (done) => {
-      var rooms = ['alley', 'codereview', 'learnstuff', 'nycoffice'];
-      var approvedUrl = 'https://github.com/alleyinteractive/special/pull/456'
-      var otherUrl = 'https://github.com/alleyinteractive/special/pull/123';
+      const rooms = ['alley', 'codereview', 'learnstuff', 'nycoffice'];
+      const approvedUrl = 'https://github.com/alleyinteractive/special/pull/456';
+      const otherUrl = 'https://github.com/alleyinteractive/special/pull/123';
       // add prs to different rooms
-      rooms.forEach(function(room) {
-        addNewCR(approvedUrl + '/files', {room: room});
-        addNewCR(otherUrl, {room: room});
+      rooms.forEach((room) => {
+        addNewCR(`${approvedUrl}/files`, { room });
+        addNewCR(otherUrl, { room });
       });
 
       // setup the data we want to pretend that Github is sending
-      var requestBody = {
-        issue : {html_url : approvedUrl},
-        comment : {
-          body : 'I give it a :horse:, great job!',
-          user : {login : 'bcampeau'}
-        }
+      const requestBody = {
+        issue: { html_url: approvedUrl },
+        comment: {
+          body: 'I give it a :horse:, great job!',
+          user: { login: 'bcampeau' },
+        },
       };
 
       // expect the approved pull request to be approved in all rooms
       // and the other pull request to be unchanged
-      testWebhook('issue_comment', requestBody, function(err, res) {
-        expect(res.text).toBe('issue_comment approved ' + approvedUrl);
-        rooms.forEach(function(room) {
-          queue = code_reviews.room_queues[room];
+      testWebhook('issue_comment', requestBody, (err, res) => {
+        expect(res.text).toBe(`issue_comment approved ${approvedUrl}`);
+        rooms.forEach((room) => {
+          const queue = code_reviews.room_queues[room];
           expect(queue.length).toBe(2);
           expect(queue[0].url).toBe(otherUrl);
           expect(queue[0].status).toBe('new');
-          expect(queue[1].url).toBe(approvedUrl + '/files');
+          expect(queue[1].url).toBe(`${approvedUrl}/files`);
           expect(queue[1].status).toBe('approved');
           done();
         });
@@ -113,7 +113,7 @@ describe("Code Review Emoji Approval", () => {
       testCommentText({
         comment: 'This needs more work, sorry.',
         expectedRes: 'issue_comment did not yet approve ',
-        expectedStatus: 'new'
+        expectedStatus: 'new',
       }, done);
     });
 
@@ -121,7 +121,7 @@ describe("Code Review Emoji Approval", () => {
       testCommentText({
         comment: ':pizza: :pizza: :100:',
         expectedRes: 'issue_comment approved ',
-        expectedStatus: 'approved'
+        expectedStatus: 'approved',
       }, done);
     });
 
@@ -129,39 +129,39 @@ describe("Code Review Emoji Approval", () => {
       testCommentText({
         comment: 'nice work pal 🍾',
         expectedRes: 'issue_comment approved ',
-        expectedStatus: 'approved'
+        expectedStatus: 'approved',
       }, done);
     });
 
     it('DMs user when CR is approved by emoji', (done) => {
-      var url = 'https://github.com/alleyinteractive/huron/pull/567';
+      const url = 'https://github.com/alleyinteractive/huron/pull/567';
       addNewCR(url);
 
       // setup the data we want to pretend that Github is sending
-      var requestBody = {
-        issue : {
-          html_url : url
+      const requestBody = {
+        issue: {
+          html_url: url,
         },
-        comment : {
-          body : "Nice job!:tada:\nMake these tweaks then :package: it!",
-          user : {
-            login : 'gfargo'
-          }
-        }
+        comment: {
+          body: 'Nice job!:tada:\nMake these tweaks then :package: it!',
+          user: {
+            login: 'gfargo',
+          },
+        },
       };
 
       adapter.on('send', (envelope, strings) => {
-        expect(strings[0]).toBe('hey ' + envelope.room + '! gfargo approved ' + url +
-          ':\nNice job!:tada:\nMake these tweaks then :package: it!');
-        var cr = code_reviews.room_queues.test_room[0];
-        expect(envelope.room).toBe('@' +cr.user.name);
+        expect(strings[0]).toBe(`hey ${envelope.room}! gfargo approved ${url}:` +
+          '\nNice job!:tada:\nMake these tweaks then :package: it!');
+        const cr = code_reviews.room_queues.test_room[0];
+        expect(envelope.room).toBe(`@${cr.user.name}`);
         expect(cr.url).toBe(url);
         expect(cr.status).toBe('approved');
         done();
       });
 
-      testWebhook('issue_comment', requestBody, function(err, res) {
-        expect(res.text).toBe('issue_comment approved ' + url);
+      testWebhook('issue_comment', requestBody, (err, res) => {
+        expect(res.text).toBe(`issue_comment approved ${url}`);
       });
     });
   }
@@ -184,7 +184,7 @@ describe("Code Review Emoji Approval", () => {
       'X-Github-Event' : eventType,
     })
     .send(requestBody)
-    .end(function(err, res) {
+    .end((err, res) => {
       expect(err).toBeFalsy();
       callback(err, res);
     });
@@ -211,7 +211,7 @@ describe("Code Review Emoji Approval", () => {
     };
 
     // not approved
-    testWebhook('issue_comment', requestBody, function(err, res) {
+    testWebhook('issue_comment', requestBody, (err, res) => {
       expect(res.text).toBe(args.expectedRes + url);
       expect(code_reviews.room_queues.test_room[0].status).toBe(args.expectedStatus);
       done();
@@ -242,7 +242,7 @@ describe("Code Review Emoji Approval", () => {
 
     // expect the closed pull request to be closed in all rooms
     // and the other pull request to be unchanged
-    testWebhook('pull_request', requestBody, function(err, res) {
+    testWebhook('pull_request', requestBody, (err, res) => {
       expect(code_reviews.room_queues.test_room[0].status).toBe(expectedStatus);
       if (done) {
         done();
