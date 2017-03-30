@@ -387,11 +387,11 @@ class CodeReviews
       repo = owner + '/' + repo
     return repo + '/' + pr
 
-  # Return github api request url string from PR url
+  # Return github files api request url string from PR url
   #
   # @param string url PR url
   # @return string github_url for CR queue
-  url_to_github_api_url: (url) ->
+  url_to_github_api_url_files: (url) ->
     matches = @pr_url_regex.exec url
     if ! matches || matches.length < 5
       return null
@@ -400,6 +400,20 @@ class CodeReviews
     pr = matches[4]
     return 'https://api.github.com/repos/' + owner + '/' +
     repo + '/pulls/' + pr + '/files?per_page=100'
+
+  # Return github pr api request url string from PR url
+  #
+  # @param string url PR url
+  # @return string github_url for CR queue
+  url_to_github_api_url_pr: (url) ->
+    matches = @pr_url_regex.exec url
+    if ! matches || matches.length < 5
+      return null
+    owner = matches[2]
+    repo = matches[3]
+    pr = matches[4]
+    return 'https://api.github.com/repos/' + owner + '/' +
+    repo + '/pulls/' + pr
 
   # Send a confirmation message to msg for cr
   #
@@ -431,15 +445,19 @@ class CodeReviews
   add_cr_with_extra_info: (cr, msg, notification_string = null) ->
     if (process.env.HUBOT_GITHUB_TOKEN)? # If we have GitHub creds...
       github = require('githubot')
-      github_api_url = @url_to_github_api_url(cr.url)
-      github.get (github_api_url), (files) =>
+      github_api_files = @url_to_github_api_url_files(cr.url)
+      github_api_pr = @url_to_github_api_url_pr(cr.url)
+      github.get (github_api_files), (files) =>
         files_string = @pr_file_types files
         cr.extra_info = files_string || ''
-        @add cr
-        @send_submission_confirmation(cr, msg, notification_string)
+        github.get (github_api_pr), (pr) =>
+          if (pr)? and (pr.user)? and (pr.user.login)?
+            cr.github_pr_submitter = pr.user.login
+          @add cr
+          @send_submission_confirmation(cr, msg, notification_string)
 
       github.handleErrors (response) =>
-        console.log "Unable to connect to GitHub's API for #{github_api_url}." +
+        console.log "Unable to connect to GitHub's API for #{cr.slug}." +
         " Ensure you have access. Response: #{response.statusCode}"
         @add cr
         @send_submission_confirmation(cr, msg, notification_string)
@@ -512,8 +530,10 @@ class CodeReviews
     message = commenter + ' commented on ' + url + ":\n" + comment
 
     for cr in cr_list
-      # send DM to Slack user who added the PR to the queue (not the Github user who opened the PR)
-      @robot.messageRoom '@' + cr.user.name, 'hey @' + cr.user.name + ', ' + message
+      # If the comment wasn't from the Github user who opened the PR
+      if cr.github_pr_submitter isnt commenter
+        # send DM to Slack user who added the PR to the queue
+        @robot.messageRoom '@' + cr.user.name, 'hey @' + cr.user.name + ', ' + message
 
   # Find and update CRs across all rooms that match a URL
   # @param string url URL of GitHub PR
