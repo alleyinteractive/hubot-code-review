@@ -6,6 +6,7 @@ schedule = require 'node-schedule'
 CR_Middleware = require './CodeReviewsMiddleware'
 sendFancyMessage = require './lib/sendFancyMessage'
 msgRoomName = require './lib/msgRoomName'
+roomExists = require './lib/roomExists'
 EmojiDataParser = require './lib/EmojiDataParser'
 
 
@@ -155,10 +156,11 @@ class CodeReviews
 
   # Add a CR to a room queue
   #
-  # @param CodeReview cr Code Reiew object to add
+  # @param CodeReview cr Code Review object to add
   # @retun none
   add: (cr) ->
     return unless cr.user.room
+    return unless roomExists(cr.user.room, @robot)
     @room_queues[cr.user.room] ||= []
     @room_queues[cr.user.room].unshift(cr) if false == @find_slug_index(cr.user.room, cr.slug)
     @update_redis()
@@ -358,15 +360,17 @@ class CodeReviews
       rooms_have_new_crs = false
       trigger = =>
         for room of @room_queues
-          active_crs = @list room
-          if active_crs["cr"].length > 0
-            rooms_have_new_crs = true
-            @send_list room
-            if @reminder_count is 11
-              @robot.send { room: room }, "@here: :siren: This queue has been active for an hour," +
-              " someone get on this. :siren:\n_Reminding hourly from now on_"
-            else if @reminder_count > 11
-              @robot.send { room: room }, "This is an hourly reminder."
+          # exclude non-existent or newly archived rooms
+          if roomExists(room, @robot)
+            active_crs = @list room
+            if active_crs["cr"].length > 0
+              rooms_have_new_crs = true
+              @send_list room
+              if @reminder_count is 11
+                @robot.send { room: room }, "@here: :siren: This queue has been active for an hour," +
+                " someone get on this. :siren:\n_Reminding hourly from now on_"
+              else if @reminder_count > 11
+                @robot.send { room: room }, "This is an hourly reminder."
         @reminder_count++ unless rooms_have_new_crs is false
         if @reminder_count is 11
           nag_delay = nag_delay * 12
