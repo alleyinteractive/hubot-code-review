@@ -377,7 +377,7 @@ class CodeReviews
               else if minutes > 60
                 @robot.send { room: room }, "This is an hourly reminder."
         @reminder_count++ unless rooms_have_new_crs is false
-        if minutes >= 60 and nag_delay < 60
+        if minutes >= 60
           nag_delay = 60 # set to one hour intervals
         @queue(nag_delay)
       @current_timeout = setTimeout(trigger, nag_delay * 60000) # milliseconds in a minute
