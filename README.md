@@ -72,7 +72,7 @@ file type lookups or DMs when your PR is approved/rejected require 2 things:
 - If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type information on PR submission. Check out the instructions for configuring
 [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
-- Set ```HUBOT_CODE_REVIEW_REMINDER_MINUTES``` to customize the number of minutes between pending code review prompts during the first hour of inactivity (the default is 5, and the effective max is 60). Note that hourly reminders (every 60 minutes) will still take affect after the first hour.
+- Set ```HUBOT_CODE_REVIEW_REMINDER_MINUTES``` to customize the number of minutes between pending code review prompts during the first hour of inactivity (the default is 5, and the effective max is 60). Note that hourly reminders will still take effect after the first 60 minutes.
 
 - Set ```HUBOT_CODE_REVIEW_KARMA_DISABLED``` to `true` to prevent Hubot from listening for any
 [code review karma](/docs/code-review-karma.md) commands.
