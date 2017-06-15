@@ -13,8 +13,7 @@ to the room's queue (each room has its own queue)...
 
 ![](/docs/images/submit-pr.png)
 
-Every 5 minutes, Hubot reports the current code review queue to the room (after an hour of
-no interaction, it messages @here with a warning and switches to hourly reminders)...
+Every 5 minutes, Hubot reports the current code review queue to the room (after an hour of no interaction, it messages @here with a warning and switches to hourly reminders)...
 
 ![](/docs/images/remind-pr.png)
 
@@ -70,16 +69,15 @@ file type lookups or DMs when your PR is approved/rejected require 2 things:
 
 2) **Set Environmental variables:**
 
-- If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type
-information on PR submission. Check out the instructions for configuring
+- If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type information on PR submission. Check out the instructions for configuring
 [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
+
+- Set ```HUBOT_CODE_REVIEW_REMINDER_MINUTES``` to customize the number of minutes between pending code review prompts during the first hour of inactivity (the default is 5, and the effective max is 60). Note that hourly reminders will still take effect after the first 60 minutes.
 
 - Set ```HUBOT_CODE_REVIEW_KARMA_DISABLED``` to `true` to prevent Hubot from listening for any
 [code review karma](/docs/code-review-karma.md) commands.
 
-- ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic
-before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/).
-If this variable is `true`, a comment on the PR that includes one or more emoji conveys PR approval
+- ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment on the PR that includes one or more emoji conveys PR approval
 and will DM the submitter accordingly.
 
 
