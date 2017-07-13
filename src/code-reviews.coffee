@@ -305,21 +305,28 @@ module.exports = (robot) ->
 
     # Check if PR was approved via GitHub's Pull Request Review
     else if req.headers['x-github-event'] is 'pull_request_review'
-      if req.body.review.state is 'approved'
-        response = "pull_request_review approved #{req.body.pull_request.html_url}"
-        code_reviews.approve_cr_by_url(
+      if req.body.action? and req.body.action is 'dismissed'
+        response = "pull_request_review dismissed #{req.body.pull_request.html_url}"
+        code_reviews.dismiss_cr_by_url(
           req.body.pull_request.html_url,
-          req.body.review.user.login,
-          req.body.review.body
+          req.body.review.user.login
         )
       else
-        if req.body.review.body?
-          code_reviews.comment_cr_by_url(
+        if req.body.review.state is 'approved'
+          response = "pull_request_review approved #{req.body.pull_request.html_url}"
+          code_reviews.approve_cr_by_url(
             req.body.pull_request.html_url,
             req.body.review.user.login,
             req.body.review.body
           )
-        response = "pull_request_review not yet approved #{req.body.pull_request.html_url}"
+        else
+          response = "pull_request_review not yet approved #{req.body.pull_request.html_url}"
+          if req.body.review.body?
+            code_reviews.comment_cr_by_url(
+              req.body.pull_request.html_url,
+              req.body.review.user.login,
+              req.body.review.body
+            )
     else
       res.statusCode = 400
       response = "invalid x-github-event #{req.headers['x-github-event']}"

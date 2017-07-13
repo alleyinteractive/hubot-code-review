@@ -544,6 +544,25 @@ class CodeReviews
         # send DM to Slack user who added the PR to the queue
         @robot.messageRoom '@' + cr.user.name, 'hey @' + cr.user.name + ', ' + message
 
+  # Notify submitter when PR review has been dismissed
+  #
+  # @param string url URL of PR on GitHub
+  # @param string reviewer GitHub username of person who created review
+  # @return none
+  dismiss_cr_by_url: (url, reviewer) ->
+    cr_list = @update_cr_by_url url
+    unless cr_list.length
+      return
+    message = "#{reviewer}'s review for #{url} was *dismissed*\n\n" +
+              "Consider requesting a new review or resetting the PR if needed"
+
+    for cr in cr_list
+      # If the review wasn't from the Github user who opened the PR
+      if cr.github_pr_submitter isnt reviewer
+        # send DM to Slack user who added the PR to the queue
+        @robot.messageRoom '@' + cr.user.name, 'hey @' + cr.user.name + ', ' + message
+
+
   # Find and update CRs across all rooms that match a URL
   # @param string url URL of GitHub PR
   # @param string|bool status Optional new status of CR

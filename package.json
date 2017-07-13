@@ -1,6 +1,6 @@
 {
   "name": "hubot-code-review",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Alley Interactive <ops+hubot@alleyinteractive.com>",
   "description": "A Hubot script for GitHub code review on Slack",
   "main": "index.coffee",
