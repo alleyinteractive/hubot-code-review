@@ -134,8 +134,6 @@ class CodeReviewKarma
       msg_prefix = "Here's the leaderboard for this month:"
       award_room = "\##{process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM}"
     return unless (award_room)?
-    console.log award_room
-    console.log msg
     reviews_this_month = Object.keys(@monthly_scores).length
 
     if reviews_this_month is 0
