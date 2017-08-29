@@ -142,6 +142,9 @@ class CodeReviewKarma
         text: "No code reviews seen this month yet. :cricket:"
         color: "#C0C0C0"
     else
+      attachments.push
+        fallback: msg_prefix
+        pretext: msg_prefix
       top_5 = Object.keys(@monthly_scores)
         .map((index) =>
           return {
