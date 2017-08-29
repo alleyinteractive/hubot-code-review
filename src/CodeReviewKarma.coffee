@@ -128,10 +128,10 @@ class CodeReviewKarma
     attachments = []
 
     if (msg)? # Prompt from message (vs. cron)
-      msg_prefix = "Here's how things stand:"
+      msg_prefix = "Here's how things stand this month:"
       award_room = msg.message.room
     else # Triggered from cron
-      msg_prefix = "Here's the leaderboard for this month:"
+      msg_prefix = "Here's the final code review leaderboard for this month:"
       award_room = "\##{process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM}"
     return unless (award_room)?
     reviews_this_month = Object.keys(@monthly_scores).length
