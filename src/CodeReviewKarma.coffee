@@ -135,6 +135,9 @@ class CodeReviewKarma
       award_room = "\##{process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM}"
     return unless (award_room)?
     reviews_this_month = Object.keys(@monthly_scores).length
+    # Debugging
+    console.log @monthly_scores
+    console.log reviews_this_month
 
     if reviews_this_month is 0
       attachments.push
