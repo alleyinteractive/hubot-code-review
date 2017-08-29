@@ -165,13 +165,13 @@ class CodeReviewKarma
           when 1 then medal_color = "#D4AF37" # gold
           when 2 then medal_color = "#BCC6CC" # silver
           when 3 then medal_color = "#5B391E" # bronze
-          else medal_color = "#CCCCCC" # gray
+          else medal_color = null # empty
         entry = top_5[index]
         user_detail = @robot.brain.userForName("#{entry.user}")
         gravatar = user_detail.slack.profile.image_72
         score_field_array = []
         score_field_array.push
-          title: "Reviewed / Taken",
+          title: "Reviewed / Requested",
           value: "*#{entry.give}* / *#{entry.take}*",
           short: true
         score_field_array.push
@@ -179,7 +179,7 @@ class CodeReviewKarma
           value: "*#{entry.karma}*",
           short: true
         attachments.push
-          fallback: "#{entry.user}: Reviewed #{entry.give}, Taken #{entry.take}, Karma: #{entry.karma}"
+          fallback: "#{entry.user}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
           text: "*\##{placement} - #{user_detail.slack.real_name}* (@#{entry.user}): "
           fields: score_field_array
           mrkdwn_in: ["text", "fields"]
