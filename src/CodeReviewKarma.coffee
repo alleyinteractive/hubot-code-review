@@ -135,9 +135,6 @@ class CodeReviewKarma
       award_room = "\##{process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM}"
     return unless (award_room)?
     reviews_this_month = Object.keys(@monthly_scores).length
-    # Debugging
-    console.log @monthly_scores
-    console.log reviews_this_month
 
     if reviews_this_month is 0
       attachments.push
@@ -156,8 +153,11 @@ class CodeReviewKarma
             take: @monthly_scores[index].take,
             karma: @karma(@monthly_scores[index].give, @monthly_scores[index].take)
           }
-        ).sort((a, b) ->
-          return a.give - b.give
+        ).sort((a, b) -> # Sort by most reviews given followed by karma
+          if b.give is a.give
+            return b.karma - a.karma
+          else
+            return b.give - a.give
         ).slice(0, 5)
       for index of top_5
         placement = parseInt(index) + 1 # Shift for 0 start array
