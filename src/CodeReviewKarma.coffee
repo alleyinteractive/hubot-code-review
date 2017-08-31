@@ -179,7 +179,7 @@ class CodeReviewKarma
         .map((index) =>
           return {
             user: index,
-            list: 'Most Requested Reviews',
+            list: 'Most Requests',
             give: @monthly_scores[index].give,
             take: @monthly_scores[index].take,
             karma: @karma(@monthly_scores[index].give, @monthly_scores[index].take)
@@ -226,17 +226,27 @@ class CodeReviewKarma
         else
           full_name = entry.user
         score_field_array = []
+        switch (entry.list)
+          when 'Most Reviews'
+            reviewed_requested_text = "*#{entry.give}* / #{entry.take}"
+            karma_text = "#{entry.karma}"
+          when 'Most Requests'
+            reviewed_requested_text = "#{entry.give} / *#{entry.take}*"
+            karma_text = "#{entry.karma}"
+          when 'Best Karma'
+            reviewed_requested_text = "#{entry.give} / #{entry.take}"
+            karma_text = "*#{entry.karma}*"
         score_field_array.push
           title: "Reviewed / Requested",
-          value: "*#{entry.give}* / *#{entry.take}*",
+          value: reviewed_requested_text,
           short: true
         score_field_array.push
           title: "Karma Score",
-          value: "*#{entry.karma}*",
+          value: karma_text,
           short: true
         attachments.push
           fallback: "#{full_name}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
-          text: "*\##{entry.placement} #{entry.list} - #{full_name}* (@#{entry.user}): "
+          text: "\#*_#{entry.placement}_ #{entry.list}* - *#{full_name}* (@#{entry.user}): "
           fields: score_field_array
           mrkdwn_in: ["text", "fields"]
           color: medal_color
