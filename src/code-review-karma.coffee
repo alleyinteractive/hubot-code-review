@@ -52,8 +52,8 @@ module.exports = (robot) ->
       else
         msg.send "I could not remove #{user} from the CR rankings"
 
-    robot.respond /award test/, (msg) ->
-      code_review_karma.monthly_award(msg)
+    robot.respond /(?:what (?:is|are) the )?monthly (?:code review|cr) (?:rankings|leaderboard)\??/i,
+      code_review_karma.monthly_rankings(msg)
 
     robot.respond /merge ([-_a-z0-9]+)(?:'s?)? cr scores into ([-_a-z0-9]+)/i, (msg) ->
       old_user = msg.match[1]

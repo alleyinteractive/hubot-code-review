@@ -6,8 +6,8 @@ class CodeReviewKarma
     @scores = {}
     @monthly_scores = {}
 
-    @monthly_award_schedule = '0 0 1 * *'       # midnight on the first of every month
-    @monthly_award_cron = null
+    @monthly_rankings_schedule = '0 0 1 * *'       # midnight on the first of every month
+    @monthly_rankings_cron = null
 
     @robot.brain.on 'loaded', =>
       if @robot.brain.data.code_review_karma
@@ -16,9 +16,9 @@ class CodeReviewKarma
         @monthly_scores = cache.monthly_scores || {}
 
     # Schedule Monthly Award and Score Reset
-    unless @monthly_award_cron
-      @monthly_award_cron = schedule.scheduleJob 'CodeReviewKarma.monthly_award_cron', @monthly_award_schedule, () =>
-        @monthly_award()
+    unless @monthly_rankings_cron
+      @monthly_rankings_cron = schedule.scheduleJob 'CodeReviewKarma.monthly_rankings_cron', @monthly_rankings_schedule, () =>
+        @monthly_rankings()
 
   # Update Redis store of CR queues and karma scores
   # @return none
@@ -129,7 +129,7 @@ class CodeReviewKarma
   # via msg: to the original room
   #
   # @return none
-  monthly_award: (msg = null) ->
+  monthly_rankings: (msg = null) ->
     msg_prefix = ""
     attachments = []
 
@@ -156,28 +156,64 @@ class CodeReviewKarma
       attachments.push
         fallback: msg_prefix
         pretext: msg_prefix
-      top_5 = Object.keys(@monthly_scores)
+      # Top three most reviews given followed by karma
+      top_3_reviewers = Object.keys(@monthly_scores)
         .map((index) =>
           return {
             user: index,
+            list: 'Most Reviews',
+            give: @monthly_scores[index].give,
+            take: @monthly_scores[index].take,
+            karma: @karma(@monthly_scores[index].give, @monthly_scores[index].take)
+          }
+        ).sort((a, b) ->
+          if b.give is a.give
+            return b.karma - a.karma
+          else
+            return b.give - a.give
+        ).slice(0, 3)
+      # Top three most reviews requested followed by karma
+      top_3_requesters = Object.keys(@monthly_scores)
+        .map((index) =>
+          return {
+            user: index,
+            list: 'Most Requested Reviews',
             give: @monthly_scores[index].give,
             take: @monthly_scores[index].take,
             karma: @karma(@monthly_scores[index].give, @monthly_scores[index].take)
           }
         ).sort((a, b) -> # Sort by most reviews given followed by karma
-          if b.give is a.give
+          if b.take is a.take
             return b.karma - a.karma
           else
+            return b.take - a.take
+        ).slice(0, 3)
+      # Top three best karma followed by reviews
+      top_1_karma = Object.keys(@monthly_scores)
+        .map((index) =>
+          return {
+            user: index,
+            list: 'Best Karma'
+            give: @monthly_scores[index].give,
+            take: @monthly_scores[index].take,
+            karma: @karma(@monthly_scores[index].give, @monthly_scores[index].take)
+          }
+        ).sort((a, b) -> # Sort by most reviews given followed by karma
+          if b.karma is a.karma
             return b.give - a.give
-        ).slice(0, 5)
-      for index of top_5
+          else
+            return b.karma - a.karma
+        ).slice(0, 1)
+      monthly_leaderboard = []
+      monthly_leaderboard.push(top_3_reviewers, top_3_requesters, top_3_karma)
+      for index of monthly_leaderboard
         placement = parseInt(index) + 1 # Shift for 0 start array
         switch(placement)
           when 1 then medal_color = "#D4AF37" # gold
           when 2 then medal_color = "#BCC6CC" # silver
           when 3 then medal_color = "#5B391E" # bronze
           else medal_color = "#FFFFFF" # white
-        entry = top_5[index]
+        entry = monthly_leaderboard[index]
         user_detail = @robot.brain.userForName("#{entry.user}")
         if (user_detail.slack)? # if slack, add some deeper data
           gravatar = user_detail.slack.profile.image_72
@@ -195,7 +231,7 @@ class CodeReviewKarma
           short: true
         attachments.push
           fallback: "#{full_name}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
-          text: "*\##{placement} - #{full_name}* (@#{entry.user}): "
+          text: "*\##{placement} #{entry.list} - #{full_name}* (@#{entry.user}): "
           fields: score_field_array
           mrkdwn_in: ["text", "fields"]
           color: medal_color
