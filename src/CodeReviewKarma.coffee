@@ -205,7 +205,7 @@ class CodeReviewKarma
             return b.karma - a.karma
         ).slice(0, 1)
       monthly_leaderboard = []
-      monthly_leaderboard.push(top_3_reviewers, top_3_requesters, top_3_karma)
+      monthly_leaderboard.push(top_3_reviewers, top_3_requesters, top_1_karma)
       for index of monthly_leaderboard
         placement = parseInt(index) + 1 # Shift for 0 start array
         switch(placement)
