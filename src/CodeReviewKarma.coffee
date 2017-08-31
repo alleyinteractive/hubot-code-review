@@ -17,9 +17,8 @@ class CodeReviewKarma
 
     # Schedule Monthly Award and Score Reset
     unless @monthly_award_cron
-      if (process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM)?
-        @monthly_award_cron = schedule.scheduleJob 'CodeReviewKarma.monthly_award_cron', @monthly_award_schedule, () =>
-          @monthly_award()
+      @monthly_award_cron = schedule.scheduleJob 'CodeReviewKarma.monthly_award_cron', @monthly_award_schedule, () =>
+        @monthly_award()
 
   # Update Redis store of CR queues and karma scores
   # @return none
@@ -113,10 +112,17 @@ class CodeReviewKarma
   # Reset all scores
   # @return none
   flush_scores: ->
+    console.debug "CodeReviewKarma.flush_scores: resetting all scores..."
     @scores = {}
     @monthly_scores = {}
     @update_redis()
-    clearTimeout @current_timeout if @current_timeout
+
+  # Reset monthly scores
+  # @return none
+  flush_monthly_scores: ->
+    console.debug "CodeReviewKarma.flush_monthly_scores: resetting monthly_scores..."
+    @monthly_scores = {}
+    @update_redis()
 
   # Announce top 5 reviewers
   # via cron: HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM
@@ -130,10 +136,14 @@ class CodeReviewKarma
     if (msg)? # Prompt from message (vs. cron)
       msg_prefix = "Here's how things stand this month:"
       award_room = msg.message.room
-    else # Triggered from cron
+    else if (process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM)?
+      # Triggered from cron and HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM set
       msg_prefix = "Here's the final code review leaderboard for this month:"
       award_room = "\##{process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM}"
-    return unless (award_room)?
+    else
+      # Triggered from cron, no room set... clear monthly_scores and return
+      @flush_monthly_scores()
+      return
     reviews_this_month = Object.keys(@monthly_scores).length
 
     if reviews_this_month is 0
@@ -165,7 +175,7 @@ class CodeReviewKarma
           when 1 then medal_color = "#D4AF37" # gold
           when 2 then medal_color = "#BCC6CC" # silver
           when 3 then medal_color = "#5B391E" # bronze
-          else medal_color = null # empty
+          else medal_color = "#FFFFFF" # white
         entry = top_5[index]
         user_detail = @robot.brain.userForName("#{entry.user}")
         gravatar = user_detail.slack.profile.image_72
@@ -189,8 +199,6 @@ class CodeReviewKarma
     sendFancyMessage(@robot, "#{award_room}", attachments)
     # If triggered by monthly cron task, reset the monthly scores
     unless (msg)?
-      @monthly_scores = {}
-      @update_redis()
-
+      @flush_monthly_scores()
 
 module.exports = CodeReviewKarma
