@@ -133,7 +133,8 @@ class CodeReviewKarma
     msg_prefix = ""
     attachments = []
 
-    if (msg)? # Prompt from message (vs. cron)
+    if (msg)?
+      # function start from message (not cron)
       msg_prefix = "Here's how things stand this month:"
       award_room = msg.message.room
     else if (process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM)?
@@ -178,7 +179,11 @@ class CodeReviewKarma
           else medal_color = "#FFFFFF" # white
         entry = top_5[index]
         user_detail = @robot.brain.userForName("#{entry.user}")
-        gravatar = user_detail.slack.profile.image_72
+        if (user_detail.slack)? # if slack, add some deeper data
+          gravatar = user_detail.slack.profile.image_72
+          full_name = user_detail.slack.real_name
+        else
+          full_name = entry.user
         score_field_array = []
         score_field_array.push
           title: "Reviewed / Requested",
@@ -189,8 +194,8 @@ class CodeReviewKarma
           value: "*#{entry.karma}*",
           short: true
         attachments.push
-          fallback: "#{entry.user}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
-          text: "*\##{placement} - #{user_detail.slack.real_name}* (@#{entry.user}): "
+          fallback: "#{full_name}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
+          text: "*\##{placement} - #{full_name}* (@#{entry.user}): "
           fields: score_field_array
           mrkdwn_in: ["text", "fields"]
           color: medal_color
