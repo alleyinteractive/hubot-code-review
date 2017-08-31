@@ -112,7 +112,7 @@ class CodeReviewKarma
   # Reset all scores
   # @return none
   flush_scores: ->
-    console.debug "CodeReviewKarma.flush_scores: resetting all scores..."
+    console.log "CodeReviewKarma.flush_scores: resetting all scores..."
     @scores = {}
     @monthly_scores = {}
     @update_redis()
@@ -120,7 +120,7 @@ class CodeReviewKarma
   # Reset monthly scores
   # @return none
   flush_monthly_scores: ->
-    console.debug "CodeReviewKarma.flush_monthly_scores: resetting monthly_scores..."
+    console.log "CodeReviewKarma.flush_monthly_scores: resetting monthly_scores..."
     @monthly_scores = {}
     @update_redis()
 
@@ -136,11 +136,11 @@ class CodeReviewKarma
     if (msg)?
       # function start from message (not cron)
       msg_prefix = "Here's how things stand this month:"
-      award_room = msg.message.room
+      announce_room = msg.message.room
     else if (process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM)?
       # Triggered from cron and HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM set
-      msg_prefix = "Here's the final code review leaderboard for this month:"
-      award_room = "\##{process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM}"
+      msg_prefix = "Here's the final code review leaderboard for last month:"
+      announce_room = "\##{process.env.HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM}"
     else
       # Triggered from cron, no room set... clear monthly_scores and return
       @flush_monthly_scores()
@@ -252,7 +252,7 @@ class CodeReviewKarma
           color: medal_color
           thumb_url: gravatar
 
-    sendFancyMessage(@robot, "#{award_room}", attachments)
+    sendFancyMessage(@robot, "#{announce_room}", attachments)
     # If triggered by monthly cron task, reset the monthly scores
     unless (msg)?
       @flush_monthly_scores()
