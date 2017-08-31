@@ -171,6 +171,8 @@ class CodeReviewKarma
             return b.karma - a.karma
           else
             return b.give - a.give
+        ).map((winner, rank) =>
+          return Object.assign({}, winner, { placement: rank + 1 })
         ).slice(0, 3)
       # Top three most reviews requested followed by karma
       top_3_requesters = Object.keys(@monthly_scores)
@@ -187,6 +189,8 @@ class CodeReviewKarma
             return b.karma - a.karma
           else
             return b.take - a.take
+        ).map((winner, rank) =>
+          return Object.assign({}, winner, { placement: rank + 1 })
         ).slice(0, 3)
       # Top three best karma followed by reviews
       top_1_karma = Object.keys(@monthly_scores)
@@ -203,17 +207,18 @@ class CodeReviewKarma
             return b.give - a.give
           else
             return b.karma - a.karma
+        ).map((winner, rank) =>
+          return Object.assign({}, winner, { placement: rank + 1 })
         ).slice(0, 1)
-      monthly_leaderboard = []
-      monthly_leaderboard.push(top_3_reviewers, top_3_requesters, top_1_karma)
+
+      monthly_leaderboard = [top_3_reviewers..., top_3_requesters..., top_1_karma...]
       for index of monthly_leaderboard
-        placement = parseInt(index) + 1 # Shift for 0 start array
-        switch(placement)
+        entry = monthly_leaderboard[index]
+        switch(entry.placement)
           when 1 then medal_color = "#D4AF37" # gold
           when 2 then medal_color = "#BCC6CC" # silver
           when 3 then medal_color = "#5B391E" # bronze
           else medal_color = "#FFFFFF" # white
-        entry = monthly_leaderboard[index]
         user_detail = @robot.brain.userForName("#{entry.user}")
         if (user_detail)? and (user_detail.slack)? # if slack, add some deeper data
           gravatar = user_detail.slack.profile.image_72
@@ -231,7 +236,7 @@ class CodeReviewKarma
           short: true
         attachments.push
           fallback: "#{full_name}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
-          text: "*\##{placement} #{entry.list} - #{full_name}* (@#{entry.user}): "
+          text: "*\##{entry.placement} #{entry.list} - #{full_name}* (@#{entry.user}): "
           fields: score_field_array
           mrkdwn_in: ["text", "fields"]
           color: medal_color
