@@ -215,7 +215,7 @@ class CodeReviewKarma
           else medal_color = "#FFFFFF" # white
         entry = monthly_leaderboard[index]
         user_detail = @robot.brain.userForName("#{entry.user}")
-        if (user_detail.slack)? # if slack, add some deeper data
+        if (user_detail)? and (user_detail.slack)? # if slack, add some deeper data
           gravatar = user_detail.slack.profile.image_72
           full_name = user_detail.slack.real_name
         else
