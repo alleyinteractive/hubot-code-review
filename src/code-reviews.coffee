@@ -2,7 +2,7 @@
 #   Manage code review reminders
 #
 # Configuration:
-#   HUBOT_GITHUB_TOKEN
+#   see README.md
 #
 # Commands:
 #   hubot help crs - display code review help

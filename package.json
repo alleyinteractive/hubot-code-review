@@ -23,12 +23,12 @@
     "lint-tests": "eslint -c .eslintrc --ext .js ./test"
   },
   "dependencies": {
-    "githubot": "^1.0.0",
-    "moment": "^2.8.3",
-    "node-schedule": "^1.0.0",
-    "hubot": "^2.17.0",
-    "hubot-redis-brain": "^0.0.3",
-    "punycode": "^2.0.1"
+    "githubot": "^1.0.1",
+    "moment": "^2.18.1",
+    "node-schedule": "^1.2.4",
+    "hubot": "^2.19.0",
+    "hubot-redis-brain": "^0.0.4",
+    "punycode": "^2.1.0"
   },
   "peerDependencies": {
     "hubot-slack": "^4.3.1"
@@ -42,13 +42,13 @@
   },
   "license": "GPL-3.0",
   "devDependencies": {
-    "coffee-script": "^1.12.2",
+    "coffee-script": "^1.12.7",
     "coffeelint": "^1.16.0",
-    "eslint": "^3.3.1",
-    "eslint-config-airbnb": "^15.0.1",
-    "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-jsx-a11y": "^5.0.3",
-    "eslint-plugin-react": "^7.0.1",
+    "eslint": "^4.5.0",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-react": "^7.3.0",
     "hubot-mock-adapter": "^1.0.0",
     "jasmine-custom-message": "^0.8.2",
     "jasmine-node": "^1.14.5",

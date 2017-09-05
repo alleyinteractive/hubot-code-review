@@ -1,24 +1,18 @@
 sendFancyMessage = require './lib/sendFancyMessage'
-schedule = require 'node-schedule'
 
 class CodeReviewKarma
   constructor: (@robot) ->
     @scores = {}
     @monthly_scores = {}
 
-    @monthly_rankings_schedule = '0 0 1 * *'       # midnight on the first of every month
-    @monthly_rankings_cron = null
+    # Note: 'Schedule Monthly Award and Score Reset'
+    # cron task managed by CodeReviews
 
     @robot.brain.on 'loaded', =>
       if @robot.brain.data.code_review_karma
         cache = @robot.brain.data.code_review_karma
         @scores = cache.scores || {}
         @monthly_scores = cache.monthly_scores || {}
-
-    # Schedule Monthly Award and Score Reset
-    unless @monthly_rankings_cron
-      @monthly_rankings_cron = schedule.scheduleJob 'CodeReviewKarma.monthly_rankings_cron', @monthly_rankings_schedule, () =>
-        @monthly_rankings()
 
   # Update Redis store of CR queues and karma scores
   # @return none
@@ -124,15 +118,20 @@ class CodeReviewKarma
     @monthly_scores = {}
     @update_redis()
 
-  # Announce top 5 reviewers
-  # via cron: HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM
-  # via msg: to the original room
+  # Announce top reviewers this month:
+  #   Most reviews (up to three)
+  #   Most requests (up to three)
+  #   Best karma (up to 1)
+  #
+  # If called:
+  #   via cron: to HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM (if set)
+  #     Note: cron scheduled from CodeReviews to avoid duplicate schedules
+  #   via msg: to the original room
   #
   # @return none
   monthly_rankings: (msg = null) ->
     msg_prefix = ""
     attachments = []
-
     if (msg)?
       # function start from message (not cron)
       msg_prefix = "Here's how things stand this month:"
@@ -171,7 +170,7 @@ class CodeReviewKarma
             return b.karma - a.karma
           else
             return b.give - a.give
-        ).map((winner, rank) =>
+        ).map((winner, rank) ->
           return Object.assign({}, winner, { placement: rank + 1 })
         ).slice(0, 3)
       # Top three most reviews requested followed by karma
@@ -189,7 +188,7 @@ class CodeReviewKarma
             return b.karma - a.karma
           else
             return b.take - a.take
-        ).map((winner, rank) =>
+        ).map((winner, rank) ->
           return Object.assign({}, winner, { placement: rank + 1 })
         ).slice(0, 3)
       # Top three best karma followed by reviews
@@ -207,7 +206,7 @@ class CodeReviewKarma
             return b.give - a.give
           else
             return b.karma - a.karma
-        ).map((winner, rank) =>
+        ).map((winner, rank) ->
           return Object.assign({}, winner, { placement: rank + 1 })
         ).slice(0, 1)
 
@@ -245,7 +244,8 @@ class CodeReviewKarma
           value: karma_text,
           short: true
         attachments.push
-          fallback: "#{full_name}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
+          fallback:
+            "#{full_name}: Reviewed #{entry.give}, Requested #{entry.take}, Karma: #{entry.karma}"
           text: "\#*_#{entry.placement}_ #{entry.list}* - *#{full_name}* (@#{entry.user}): "
           fields: score_field_array
           mrkdwn_in: ["text", "fields"]
