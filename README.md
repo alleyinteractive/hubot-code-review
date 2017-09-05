@@ -77,6 +77,8 @@ file type lookups or DMs when your PR is approved/rejected require 2 things:
 - Set ```HUBOT_CODE_REVIEW_KARMA_DISABLED``` to `true` to prevent Hubot from listening for any
 [code review karma](/docs/code-review-karma.md) commands.
 
+- Set ```HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM``` to automatically display a monthly resetting code review leaderboard to a particular room (for more info, check out the [code review karma](/docs/code-review-karma.md) docs)
+
 - ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment on the PR that includes one or more emoji conveys PR approval
 and will DM the submitter accordingly.
 

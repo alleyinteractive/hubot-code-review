@@ -4,6 +4,7 @@ moment = require 'moment'
 schedule = require 'node-schedule'
 
 CR_Middleware = require './CodeReviewsMiddleware'
+CodeReviewKarma = require './CodeReviewKarma'
 sendFancyMessage = require './lib/sendFancyMessage'
 msgRoomName = require './lib/msgRoomName'
 roomExists = require './lib/roomExists'
@@ -14,7 +15,6 @@ class CodeReviews
   constructor: (@robot) ->
     # coffeelint: disable=max_line_length
     @pr_url_regex = /^(https?:\/\/github.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+))(?:\/files)?\/?(\s+[#|@]?[0-9a-z_-]+)?\s*$/i
-    # coffeelint: enable=max_line_length
     @room_queues = {}
     @current_timeout = null
     @reminder_count = 0
@@ -27,8 +27,14 @@ class CodeReviews
     @garbage_last_collection = 0      # counter for last collection
     @garbage_job = null
 
-    #set up middleware
+    @karma_monthly_rankings_schedule = '0 0 1 * *'       # midnight on the first of every month
+    @karma_monthly_rankings_reset = null
+
+    # Set up middleware
     CR_Middleware @robot
+
+    # CodeReviewKarma functionality for karma_monthly_rankings_reset
+    code_review_karma = new CodeReviewKarma @robot
 
     @robot.brain.on 'loaded', =>
       if @robot.brain.data.code_reviews
@@ -39,10 +45,18 @@ class CodeReviews
         unless Object.keys(@room_queues).length is 0
           @queue()
 
-    #schedule recurring collection
+    # Schedule recurring garbage collection
     unless @garbage_job
       @garbage_job = schedule.scheduleJob 'CodeReviews.collect_garbage', @garbage_cron, () =>
         @collect_garbage()
+
+    # Schedule Karma Monthly Score Reset
+    # (and notice, if HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM is set)
+    unless (@karma_monthly_rankings_reset)?
+      @karma_monthly_rankings_reset = schedule.scheduleJob 'CodeReviewKarma.monthly_rankings', @karma_monthly_rankings_schedule, () ->
+        code_review_karma.monthly_rankings()
+
+    # coffeelint: enable=max_line_length
 
   # Garbage collection, removes all CRs older than @garbage_expiration
   #

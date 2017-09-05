@@ -67,13 +67,19 @@ describe('Code Review Karma', () => {
 
   it('gives reviews', (done) => {
     codeReviewKarma.incr_score(users[0].name, 'give');
-    expect(codeReviewKarma.scores_for_user(users[0].name).give).toBe(1);
+    expect(codeReviewKarma.scores_for_user(users[0].name)
+      .all_scores.give).toBe(1);
+    expect(codeReviewKarma.scores_for_user(users[0].name)
+      .month_scores.give).toBe(1);
     done();
   });
 
   it('takes reviews', (done) => {
     codeReviewKarma.incr_score(users[0].name, 'take');
-    expect(codeReviewKarma.scores_for_user(users[0].name).take).toBe(1);
+    expect(codeReviewKarma.scores_for_user(users[0].name)
+      .all_scores.take).toBe(1);
+    expect(codeReviewKarma.scores_for_user(users[0].name)
+      .month_scores.take).toBe(1);
     done();
   });
 
