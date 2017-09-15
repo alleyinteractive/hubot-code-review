@@ -14,7 +14,15 @@ EmojiDataParser = require './lib/EmojiDataParser'
 class CodeReviews
   constructor: (@robot) ->
     # coffeelint: disable=max_line_length
-    @pr_url_regex = /^(https?:\/\/github.com\/([^\/]+)\/([^\/]+)\/pull\/(\d+))(?:\/files)?\/?(\s+[#|@]?[0-9a-z_-]+)?\s*$/i
+    @enterprise_github_url_regex = /^(?:https?:\/\/)?([\w.]+)\/?\s*$/i
+    @github_url = 'github.com'
+    if (process.env.HUBOT_ENTERPRISE_GITHUB_URL)?
+      matches = @enterprise_github_url_regex.exec process.env.HUBOT_ENTERPRISE_GITHUB_URL
+      if matches
+        @github_url = matches[0]
+    @pr_url_regex = ///
+      ^(https?:\/\/#{@github_url}\/([^\/]+)\/([^\/]+)\/pull\/(\d+))(?:\/files)?\/?(\s+[#|@]?[0-9a-z_-]+)?\s*$
+    ///i
     @room_queues = {}
     @current_timeout = null
     @reminder_count = 0
@@ -421,7 +429,10 @@ class CodeReviews
     owner = matches[2]
     repo = matches[3]
     pr = matches[4]
-    return 'https://api.github.com/repos/' + owner + '/' +
+    @github_api_url = 'api.github.com'
+    if @github_url != 'github.com'
+      @github_api_url = @github_url + '/api/v3'
+    return 'https://' + @github_api_url + '/repos/' + owner + '/' +
     repo + '/pulls/' + pr + '/files?per_page=100'
 
   # Return github pr api request url string from PR url
@@ -435,7 +446,11 @@ class CodeReviews
     owner = matches[2]
     repo = matches[3]
     pr = matches[4]
-    return 'https://api.github.com/repos/' + owner + '/' +
+
+    @github_api_url = 'api.github.com'
+    if @github_url != 'github.com'
+      @github_api_url = @github_url + '/api/v3'
+    return 'https://' + @github_api_url + '/repos/' + owner + '/' +
     repo + '/pulls/' + pr
 
   # Send a confirmation message to msg for cr
