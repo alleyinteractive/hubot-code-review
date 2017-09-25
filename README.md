@@ -69,6 +69,8 @@ file type lookups or DMs when your PR is approved/rejected require 2 things:
 
 2) **Set Environmental variables:**
 
+- If you set ```HUBOT_ENTERPRISE_GITHUB_URL``` to `https://<your_enterprise_url>`, Hubot will use it as your enterprise URL instead of the default: `https://github.com`
+
 - If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type information on PR submission. Check out the instructions for configuring
 [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
