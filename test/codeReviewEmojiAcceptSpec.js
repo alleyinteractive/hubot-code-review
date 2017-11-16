@@ -1,17 +1,17 @@
-/*eslint-env jasmine*/
+/* eslint-env jasmine*/
 
 // Allows 'since' custom messages for unit test failures
 require('jasmine-custom-message');
 
-var path       = require('path'),
-  Robot        = require('../node_modules/hubot/src/robot'),
-  TextMessage  = require('../node_modules/hubot/src/message').TextMessage,
-  util         = require('./lib/util'),
-  Users        = require('./data/users'),
+let path = require('path'),
+  Robot = require('../node_modules/hubot/src/robot'),
+  TextMessage = require('../node_modules/hubot/src/message').TextMessage,
+  util = require('./lib/util'),
+  Users = require('./data/users'),
   PullRequests = require('./data/prs'),
-  CodeReview   = require('../src/CodeReview'),
-  request      = require('supertest');
-  schedule     = require('node-schedule');
+  CodeReview = require('../src/CodeReview'),
+  request = require('supertest');
+schedule = require('node-schedule');
 
 /**
  * Tests the following features of code-review
@@ -22,32 +22,31 @@ var path       = require('path'),
     DMs user when CR is approved by emoji
  */
 
-describe("Code Review Emoji Approval", () => {
-  var robot;
-  var adapter;
-  var code_reviews;
+describe('Code Review Emoji Approval', () => {
+  let robot;
+  let adapter;
+  let code_reviews;
 
   /**
    * @var array List of Hubot User objects
    */
-  var users = [];
+  let users = [];
 
   beforeEach((done) => {
-
     // create new robot, without http, using the mock adapter
-    robot = new Robot(null, "mock-adapter", true, "hubot");
+    robot = new Robot(null, 'mock-adapter', true, 'hubot');
 
-    robot.adapter.on("connected", () => {
+    robot.adapter.on('connected', () => {
       // create a user
-      Users().getUsers().forEach(function(user) {
+      Users().getUsers().forEach((user) => {
         users.push(robot.brain.userForId(user.ID, {
           name: user.meta.name,
-          room: user.meta.room
+          room: user.meta.room,
         }));
       });
 
       // load the module
-      code_reviews = require("../src/code-reviews")(robot);
+      code_reviews = require('../src/code-reviews')(robot);
 
       adapter = robot.adapter;
       // start each test with an empty queue
@@ -59,7 +58,6 @@ describe("Code Review Emoji Approval", () => {
     });
 
     robot.run();
-
   });
 
   afterEach(() => {
@@ -177,17 +175,17 @@ describe("Code Review Emoji Approval", () => {
    * @param function callback Takes error and result arguments
    */
   function testWebhook(eventType, requestBody, callback) {
-  request(robot.router.listen())
-    .post('/hubot/hubot-code-review')
-    .set({
-      'Content-Type' : 'application/json',
-      'X-Github-Event' : eventType,
-    })
-    .send(requestBody)
-    .end((err, res) => {
-      expect(err).toBeFalsy();
-      callback(err, res);
-    });
+    request(robot.router.listen())
+      .post('/hubot/hubot-code-review')
+      .set({
+        'Content-Type': 'application/json',
+        'X-Github-Event': eventType,
+      })
+      .send(requestBody)
+      .end((err, res) => {
+        expect(err).toBeFalsy();
+        callback(err, res);
+      });
   }
 
   /**
@@ -198,16 +196,16 @@ describe("Code Review Emoji Approval", () => {
    *    string expectedStatus
    */
   function testCommentText(args, done) {
-    var url = 'https://github.com/alleyinteractive/huron/pull/567';
+    const url = 'https://github.com/alleyinteractive/huron/pull/567';
     addNewCR(url);
 
     // setup the data we want to pretend that Github is sending
-    var requestBody = {
-      issue : {html_url : url},
-      comment : {
-        body : args.comment,
-        user : {login : 'bcampeau'}
-      }
+    const requestBody = {
+      issue: { html_url: url },
+      comment: {
+        body: args.comment,
+        user: { login: 'bcampeau' },
+      },
     };
 
     // not approved
@@ -226,18 +224,18 @@ describe("Code Review Emoji Approval", () => {
    * @param function done Optional done() function for the test
    */
   function testMergeClose(githubStatus, localStatus, expectedStatus, done) {
-    var updatedUrl = 'https://github.com/alleyinteractive/special/pull/456';
+    const updatedUrl = 'https://github.com/alleyinteractive/special/pull/456';
     addNewCR(updatedUrl);
     code_reviews.room_queues.test_room[0].status = localStatus;
     code_reviews.room_queues.test_room[0].reviewer = 'jaredcobb';
 
     // setup the data we want to pretend that Github is sending
-    var requestBody = {
-      action : 'closed',
-      pull_request : {
-        merged : githubStatus === 'merged',
-        html_url : updatedUrl
-      }
+    const requestBody = {
+      action: 'closed',
+      pull_request: {
+        merged: 'merged' === githubStatus,
+        html_url: updatedUrl,
+      },
     };
 
     // expect the closed pull request to be closed in all rooms
@@ -266,10 +264,10 @@ describe("Code Review Emoji Approval", () => {
    * @param int randExclude Optional index in users array to exclude from submitters
    */
   function addNewCR(url, userMeta, randExclude) {
-    var submitter = util.getRandom(users, randExclude).value;
+    const submitter = util.getRandom(users, randExclude).value;
     if (userMeta) {
       // shallow "extend" submitter
-      Object.keys(userMeta).forEach(function(key) {
+      Object.keys(userMeta).forEach((key) => {
         submitter[key] = userMeta[key];
       });
     }
@@ -283,11 +281,11 @@ describe("Code Review Emoji Approval", () => {
    * @return int|null Number of CRs matching status, or null if room not found
    */
   function roomStatusCount(room, status) {
-    if (!code_reviews.room_queues[room]) {
+    if (! code_reviews.room_queues[room]) {
       return null;
     }
-    var counter = 0;
-    code_reviews.room_queues[room].forEach(function(cr) {
+    let counter = 0;
+    code_reviews.room_queues[room].forEach((cr) => {
       if (cr.status === status) {
         counter++;
       }
@@ -295,21 +293,21 @@ describe("Code Review Emoji Approval", () => {
     return counter;
   }
 
-  function populateTestRoomCRs(){
-    var statuses = {
-      new : [],
+  function populateTestRoomCRs() {
+    const statuses = {
+      new: [],
       claimed: [],
       approved: [],
       closed: [],
-      merged: []
-    }
+      merged: [],
+    };
     // add a bunch of new CRs
-    PullRequests.forEach(function(url, i) {
+    PullRequests.forEach((url, i) => {
       addNewCR(url);
     });
 
     // make sure there's at least one CR with each status
-    code_reviews.room_queues.test_room.forEach(function(review, i) {
+    code_reviews.room_queues.test_room.forEach((review, i) => {
       if (i < Object.keys(statuses).length) {
         status = Object.keys(statuses)[i];
         // update the CR's status

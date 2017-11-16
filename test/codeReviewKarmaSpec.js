@@ -88,14 +88,16 @@ describe('Code Review Karma', () => {
     codeReviewKarma.incr_score(users[1].name, 'give');
     codeReviewKarma.incr_score(users[1].name, 'take');
 
-    util.sendMessageAsync(adapter, users[1].name, 'hubot list all cr scores',
+    util.sendMessageAsync(
+      adapter, users[1].name, 'hubot list all cr scores',
       100,
       (envelope, strings) => {
         const expectString =
           `${users[1].name} has received 1 reviews and given 2. Code karma: 1`;
         expect(strings[0]).toBe(expectString);
         done();
-      });
+      }
+    );
   });
 
   it('reports my score', (done) => {
@@ -103,14 +105,16 @@ describe('Code Review Karma', () => {
     codeReviewKarma.incr_score(users[1].name, 'give');
     codeReviewKarma.incr_score(users[1].name, 'take');
 
-    util.sendMessageAsync(adapter, users[1].name, 'hubot what is my cr score',
+    util.sendMessageAsync(
+      adapter, users[1].name, 'hubot what is my cr score',
       100,
       (envelope, strings) => {
         const expectString =
           `${users[1].name} has received 1 reviews and given 2. Code karma: 1`;
         expect(strings[0]).toBe(expectString);
         done();
-      });
+      }
+    );
   });
 
   it('reports someones else\'s score', (done) => {
@@ -120,14 +124,16 @@ describe('Code Review Karma', () => {
 
     const queryString =
       `hubot what is ${users[1].name}'s cr score`;
-    util.sendMessageAsync(adapter, users[0].name, queryString,
+    util.sendMessageAsync(
+      adapter, users[0].name, queryString,
       100,
       (envelope, strings) => {
         const expectString =
           `${users[1].name} has received 2 reviews and given 1. Code karma: -0.5`;
         expect(strings[0]).toBe(expectString);
         done();
-      });
+      }
+    );
   });
 
   it('displays the leaderboard', (done) => {
@@ -147,7 +153,8 @@ describe('Code Review Karma', () => {
     codeReviewKarma.incr_score(users[2].name, 'give');
     codeReviewKarma.incr_score(users[2].name, 'give');
 
-    util.sendMessageAsync(adapter, users[1].name, 'hubot what are the cr rankings?',
+    util.sendMessageAsync(
+      adapter, users[1].name, 'hubot what are the cr rankings?',
       100,
       (envelope, strings) => {
         const expectString =
@@ -157,6 +164,7 @@ describe('Code Review Karma', () => {
 
         expect(strings[0]).toBe(expectString);
         done();
-      });
+      }
+    );
   });
 });
