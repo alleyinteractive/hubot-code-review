@@ -1,17 +1,17 @@
-/*eslint-env jasmine*/
+/* eslint-env jasmine*/
 
 // Allows 'since' custom messages for unit test failures
 require('jasmine-custom-message');
 
-var path       = require('path'),
-  Robot        = require('../node_modules/hubot/src/robot'),
-  TextMessage  = require('../node_modules/hubot/src/message').TextMessage,
-  util         = require('./lib/util'),
-  Users        = require('./data/users'),
+let path = require('path'),
+  Robot = require('../node_modules/hubot/src/robot'),
+  TextMessage = require('../node_modules/hubot/src/message').TextMessage,
+  util = require('./lib/util'),
+  Users = require('./data/users'),
   PullRequests = require('./data/prs'),
-  CodeReview   = require('../src/CodeReview'),
-  request      = require('supertest');
-  schedule     = require('node-schedule');
+  CodeReview = require('../src/CodeReview'),
+  request = require('supertest');
+schedule = require('node-schedule');
 
 /**
  * Tests the following features of code-review
@@ -34,33 +34,31 @@ var path       = require('path'),
     ...
  */
 
-describe("Code Review", () => {
-  var robot;
-  var adapter;
-  var code_reviews;
+describe('Code Review', () => {
+  let robot;
+  let adapter;
+  let code_reviews;
 
   /**
    * @var array List of Hubot User objects
    */
-  var users = [];
+  let users = [];
 
   beforeEach((done) => {
-
     // create new robot, without http, using the mock adapter
-    robot = new Robot(null, "mock-adapter", true, "hubot");
+    robot = new Robot(null, 'mock-adapter', true, 'hubot');
 
-    robot.adapter.on("connected", () => {
-
+    robot.adapter.on('connected', () => {
       // create a user
-      Users().getUsers().forEach(function(user) {
+      Users().getUsers().forEach((user) => {
         users.push(robot.brain.userForId(user.ID, {
           name: user.meta.name,
-          room: user.meta.room
+          room: user.meta.room,
         }));
       });
 
       // load the module
-      code_reviews = require("../src/code-reviews")(robot);
+      code_reviews = require('../src/code-reviews')(robot);
 
       adapter = robot.adapter;
       // start each test with an empty queue
@@ -72,7 +70,6 @@ describe("Code Review", () => {
     });
 
     robot.run();
-
   });
 
   afterEach(() => {
@@ -92,8 +89,8 @@ describe("Code Review", () => {
 
   it('flushes the queues', (done) => {
     PullRequests.forEach((url, i) => {
-      var rooms = ['alley', 'codereview', 'learnstuff', 'nycoffice'];
-      addNewCR(url, {room: rooms[Math.floor(Math.random()*rooms.length)]});
+      const rooms = ['alley', 'codereview', 'learnstuff', 'nycoffice'];
+      addNewCR(url, { room: rooms[Math.floor(Math.random() * rooms.length)] });
     });
     expect(Object.keys(code_reviews.room_queues).length).toBeGreaterThan(0);
     // give Redis 100ms to update
@@ -112,20 +109,20 @@ describe("Code Review", () => {
     // make sure queue is empty
     expect(Object.keys(code_reviews.room_queues).length).toEqual(0);
 
-    var currentUser = users[6];
-    var currentCR = PullRequests[4];
-    var slug = code_reviews.matches_to_slug(code_reviews.pr_url_regex.exec(currentCR));
-    var re = new RegExp("^\\*" + slug + "\\* is now in the code review queue. Let me know if anyone starts reviewing this\.$");
+    const currentUser = users[6];
+    const currentCR = PullRequests[4];
+    const slug = code_reviews.matches_to_slug(code_reviews.pr_url_regex.exec(currentCR));
+    const re = new RegExp(`^\\*${slug}\\* is now in the code review queue. Let me know if anyone starts reviewing this\.$`);
 
     adapter.on('send', (envelope, strings) => {
       // there should now be one room from the current user
-      var rooms = Object.keys(code_reviews.room_queues);
+      const rooms = Object.keys(code_reviews.room_queues);
       expect(rooms.length).toEqual(1);
-      expect(rooms[0]).toEqual(currentUser.room)
+      expect(rooms[0]).toEqual(currentUser.room);
 
       // there should be one CR in the room queue
       expect(code_reviews.room_queues[rooms[0]].length).toEqual(1);
-      expect(code_reviews.room_queues[rooms[0]][0].url).toEqual("https://github.com/alleyinteractive/ad-layers/pull/1");
+      expect(code_reviews.room_queues[rooms[0]][0].url).toEqual('https://github.com/alleyinteractive/ad-layers/pull/1');
 
       // hubot replies as expected
       expect(strings[0]).toMatch(re);
@@ -137,8 +134,8 @@ describe("Code Review", () => {
   });
 
   it('will not a allow the same CR in the same room regardless of status', (done) => {
-    var currentUser = users[7];
-    var url = PullRequests[4];
+    const currentUser = users[7];
+    const url = PullRequests[4];
     code_reviews.add(new CodeReview(currentUser, makeSlug(url), url));
 
     // listener for second time the CR is added
@@ -147,11 +144,11 @@ describe("Code Review", () => {
       expect(code_reviews.room_queues[currentUser.room].length).toEqual(1);
 
       // test different CR status next time
-      if (code_reviews.room_queues[currentUser.room][0].status === 'new') {
+      if ('new' === code_reviews.room_queues[currentUser.room][0].status) {
         code_reviews.room_queues[currentUser.room][0].status = 'claimed';
-      } else if (code_reviews.room_queues[currentUser.room][0].status === 'claimed') {
+      } else if ('claimed' === code_reviews.room_queues[currentUser.room][0].status) {
         code_reviews.room_queues[currentUser.room][0].status = 'approved';
-      } else if (code_reviews.room_queues[currentUser.room][0].status === 'approved') {
+      } else if ('approved' === code_reviews.room_queues[currentUser.room][0].status) {
         done();
       }
     });
@@ -163,9 +160,9 @@ describe("Code Review", () => {
   });
 
   it('will allow the same CR in a different room', (done) => {
-    var currentUser = users[12];
-    var url = PullRequests[6];
-    var firstRoom = currentUser.room;
+    const currentUser = users[12];
+    const url = PullRequests[6];
+    const firstRoom = currentUser.room;
     code_reviews.add(new CodeReview(currentUser, makeSlug(url), url));
 
     // listener for second time the CR is added
@@ -173,8 +170,8 @@ describe("Code Review", () => {
       // room names should be different
       expect(firstRoom).not.toBe(envelope.room);
 
-      var firstQueue = code_reviews.room_queues[firstRoom];
-      var secondQueue = code_reviews.room_queues[envelope.room];
+      const firstQueue = code_reviews.room_queues[firstRoom];
+      const secondQueue = code_reviews.room_queues[envelope.room];
 
       // rooms should both have 1 CR
       expect(firstQueue.length).toEqual(1);
@@ -190,13 +187,13 @@ describe("Code Review", () => {
   });
 
   it('claims the first CR added to the queue', (done) => {
-    var reviewer = users[2];
-    var urlsToAdd = [PullRequests[0], PullRequests[1], PullRequests[2], PullRequests[3]];
+    const reviewer = users[2];
+    const urlsToAdd = [PullRequests[0], PullRequests[1], PullRequests[2], PullRequests[3]];
     urlsToAdd.forEach((url, i) => {
       addNewCR(url, {}, 2);
     });
 
-    var alreadyReceived = false;
+    let alreadyReceived = false;
     adapter.on('send', (envelope, strings) => {
       // make sure we only get one response
       expect(alreadyReceived).toBeFalsy();
@@ -215,8 +212,8 @@ describe("Code Review", () => {
       expect(code_reviews.room_queues[reviewer.room][3].reviewer).toBe(reviewer.name);
 
       // the rest should still be new and have no reviewer
-      var unclaimedLength = code_reviews.room_queues[reviewer.room].length - 1;
-      for (var i = 0; i < unclaimedLength; i++) {
+      const unclaimedLength = code_reviews.room_queues[reviewer.room].length - 1;
+      for (let i = 0; i < unclaimedLength; i++) {
         expect(code_reviews.room_queues[reviewer.room][i].status).toBe('new');
         expect(code_reviews.room_queues[reviewer.room][i].reviewer).toBeFalsy();
       }
@@ -227,15 +224,15 @@ describe("Code Review", () => {
   });
 
   it('claims specific CR from queue', (done) => {
-    var slug = 'wordpress-fieldmanager/559';
-    var reviewer = users[9];
-    var urlsToAdd = [PullRequests[1], PullRequests[2], PullRequests[3]];
+    const slug = 'wordpress-fieldmanager/559';
+    const reviewer = users[9];
+    const urlsToAdd = [PullRequests[1], PullRequests[2], PullRequests[3]];
     urlsToAdd.forEach((url, i) => {
       addNewCR(url, {}, 9);
     });
 
     adapter.on('send', (envelope, strings) => {
-      for (var i = 0; i < code_reviews.room_queues[reviewer.room].length; i++) {
+      for (let i = 0; i < code_reviews.room_queues[reviewer.room].length; i++) {
         // the right one should be claimed
         if (slug === code_reviews.room_queues[reviewer.room][i].slug) {
           expect(code_reviews.room_queues[reviewer.room][i].status).toBe('claimed');
@@ -251,7 +248,7 @@ describe("Code Review", () => {
     });
 
     // claim the CR
-    util.sendMessageAsync(adapter, reviewer, 'on ' + slug, 300);
+    util.sendMessageAsync(adapter, reviewer, `on ${slug}`, 300);
   });
 
   it('resets a PR', (done) => {
@@ -273,17 +270,16 @@ describe("Code Review", () => {
 
     // be wrong
     util.sendMessageAsync(adapter, users[0], 'hubot: reset foo/99', 50, (envelope, strings) => {
-      expect(strings[0]).toBe("Sorry, I couldn't find any PRs in this room matching `foo/99`.");
+      expect(strings[0]).toBe('Sorry, I couldn\'t find any PRs in this room matching `foo/99`.');
     });
 
     // unclaim the CR
     util.sendMessageAsync(adapter, users[0], 'hubot: unclaim ad-layers/1', 100, (envelope, strings) => {
       expect(code_reviews.room_queues.test_room[2].status).toBe('new');
       expect(code_reviews.room_queues.test_room[2].reviewer).toBe(false);
-      expect(strings[0]).toBe("You got it, I've unclaimed *ad-layers/1* in the queue.");
+      expect(strings[0]).toBe('You got it, I\'ve unclaimed *ad-layers/1* in the queue.');
       done();
     });
-
   });
 
   it('sets a PR for a new review without a score penalty for original reviewer', (done) => {
@@ -300,14 +296,14 @@ describe("Code Review", () => {
       util.sendMessageAsync(adapter, users[1], 'hubot: redo wp-seo/378', 1, (envelope, strings) => {
         expect(code_reviews.room_queues.test_room[0].status).toBe('new');
         expect(code_reviews.room_queues.test_room[0].reviewer).toBe(false);
-        expect(strings[0]).toBe("You got it, wp-seo/378 is ready for a new review.");
+        expect(strings[0]).toBe('You got it, wp-seo/378 is ready for a new review.');
         done();
       });
     });
   });
 
   it('claims a review by searching for its slug', (done) => {
-    var reviewer = users[9];
+    const reviewer = users[9];
     // add a bunch of new CRs
     PullRequests.forEach((url, i) => {
       addNewCR(url, {}, 9);
@@ -317,45 +313,44 @@ describe("Code Review", () => {
 
     // 0 matches
     util.sendMessageAsync(adapter, users[7], 'on foobar', 50, (envelope, strings) => {
-      expect(strings[0]).toBe("Sorry, I couldn't find any new PRs in this room matching `foobar`.");
+      expect(strings[0]).toBe('Sorry, I couldn\'t find any new PRs in this room matching `foobar`.');
     });
 
     // multiple unclaimed matches
     util.sendMessageAsync(adapter, users[7], 'on fieldmanager', 100, (envelope, strings) => {
-      expect(strings[0]).toBe("You're gonna have to be more specific: `wordpress-fieldmanager/558`, or `wordpress-fieldmanager/559`?");
+      expect(strings[0]).toBe('You\'re gonna have to be more specific: `wordpress-fieldmanager/558`, or `wordpress-fieldmanager/559`?');
     });
 
     // 1 match, unclaimed
     util.sendMessageAsync(adapter, users[7], 'on 559', 300, (envelope, strings) => {
-      expect(strings[0]).toBe('Thanks, ' + users[7].name + '! I removed *wordpress-fieldmanager/559* from the code review queue.');
+      expect(strings[0]).toBe(`Thanks, ${users[7].name}! I removed *wordpress-fieldmanager/559* from the code review queue.`);
     });
 
     // 1 match, claimed
     util.sendMessageAsync(adapter, users[8], 'on 559', 500, (envelope, strings) => {
-      var bothResponses = new RegExp("Sorry, I couldn't find any new PRs in this room matching `559`."
-        + "|It looks like \\*wordpress-fieldmanager\/559\\* \\(@[a-zA-Z]+\\) has already been claimed");
+      const bothResponses = new RegExp('Sorry, I couldn\'t find any new PRs in this room matching `559`.' +
+        '|It looks like \\*wordpress-fieldmanager\/559\\* \\(@[a-zA-Z]+\\) has already been claimed');
       expect(strings[0]).toMatch(bothResponses);
     });
 
     // multiple matches, only 1 is unclaimed
     util.sendMessageAsync(adapter, users[8], 'on fieldmanager', 700, (envelope, strings) => {
-      expect(strings[0]).toBe('Thanks, ' + users[8].name + '! I removed *wordpress-fieldmanager/558* from the code review queue.');
+      expect(strings[0]).toBe(`Thanks, ${users[8].name}! I removed *wordpress-fieldmanager/558* from the code review queue.`);
     });
 
     // multiple matches, all claimed
     util.sendMessageAsync(adapter, users[8], 'on fieldmanager', 800, (envelope, strings) => {
-      expect(strings[0]).toBe("Sorry, I couldn't find any new PRs in this room matching `fieldmanager`.");
+      expect(strings[0]).toBe('Sorry, I couldn\'t find any new PRs in this room matching `fieldmanager`.');
     });
 
     // matches CR that was updated (e.g. by webhook) before it was claimed
     util.sendMessageAsync(adapter, users[8], 'on photon', 1000, (envelope, strings) => {
-      var theCr = code_reviews.room_queues.test_room[0];
-      var bothResponses = new RegExp("Sorry, I couldn't find any new PRs in this room matching `photon`."
-        + "|It looks like \\*" + theCr.slug + '\\* \\(@' + theCr.user.name + '\\) has already been ' + theCr.status);
+      const theCr = code_reviews.room_queues.test_room[0];
+      const bothResponses = new RegExp(`${'Sorry, I couldn\'t find any new PRs in this room matching `photon`.' +
+        '|It looks like \\*'}${theCr.slug}\\* \\(@${theCr.user.name}\\) has already been ${theCr.status}`);
       expect(strings[0]).toMatch(bothResponses);
       done();
     });
-
   });
 
   it('claims all new CRs in the queue', (done) => {
@@ -363,25 +358,24 @@ describe("Code Review", () => {
     code_reviews.room_queues.test_room = [];
     code_reviews.room_queues.second_room = [];
     PullRequests.forEach((url, i) => {
-      var cr = new CodeReview(users[6], makeSlug(url), url);
-      var room = i <= 3 ? 'test_room' : 'second_room';
+      const cr = new CodeReview(users[6], makeSlug(url), url);
+      const room = 3 >= i ? 'test_room' : 'second_room';
       code_reviews.room_queues[room].unshift(cr);
     });
     expect(roomStatusCount('test_room', 'new')).toBe(4);
     expect(roomStatusCount('second_room', 'new')).toBe(3);
 
-
-    var responsesReceived = 0;
+    let responsesReceived = 0;
     util.sendMessageAsync(adapter, users[0], 'on *', 1000, (envelope, strings) => {
-      if (responsesReceived === 0) {
+      if (0 === responsesReceived) {
         expect(strings[0]).toMatch(/:tornado2?:/);
       } else {
         slug = makeSlug(PullRequests[responsesReceived - 1]);
-        expect(strings[0]).toBe('Thanks, ' + users[0].name + '! I removed *' + slug + '* from the code review queue.');
+        expect(strings[0]).toBe(`Thanks, ${users[0].name}! I removed *${slug}* from the code review queue.`);
       }
       responsesReceived++;
 
-      if(responsesReceived === 5) { // 5 = :tornado2: + 4 unclaimed reviews
+      if (5 === responsesReceived) { // 5 = :tornado2: + 4 unclaimed reviews
         // should have claimed all reviews in test_room and none of the reviews in second_room
         expect(roomStatusCount('test_room', 'claimed')).toBe(4);
         expect(roomStatusCount('test_room', 'new')).toBe(0);
@@ -398,18 +392,18 @@ describe("Code Review", () => {
       users[3].room = 'second_room';
       responsesReceived = 0;
       util.sendMessageAsync(adapter, users[3], 'on *', 1000, (envelope, strings) => {
-        responsesReceived++
-        if (responsesReceived === 3) { // 3 = :tornado2: + 2 unclaimed reviews
+        responsesReceived++;
+        if (3 === responsesReceived) { // 3 = :tornado2: + 2 unclaimed reviews
           expect(roomStatusCount('second_room', 'new')).toBe(0);
           expect(roomStatusCount('second_room', 'claimed')).toBe(3);
           done();
         }
       });
-    }
+    };
   });
 
   it('ignores timer start command', (done) => {
-    var receivedMessage = false;
+    let receivedMessage = false;
     adapter.on('send', (envelope, strings) => {
       // we received a message when we shouldn't have
       receivedMessage = true;
@@ -441,7 +435,6 @@ describe("Code Review", () => {
         });
       }
     }, 50);
-
   });
 
   it('ignores specific CR', (done) => {
@@ -457,12 +450,12 @@ describe("Code Review", () => {
       for (let i = 0; i < code_reviews.room_queues[reviewer.room].length; i++) {
         // specific slug should be ignored
         slugsInRoom.push(code_reviews.room_queues[reviewer.room][i].slug);
-        since('Expect the ignored slug: ' + slug + ' to be gone from the room').
-          expect(slug === code_reviews.room_queues[reviewer.room][i].slug).toBe(false);
+        since(`Expect the ignored slug: ${slug} to be gone from the room`)
+          .expect(slug === code_reviews.room_queues[reviewer.room][i].slug).toBe(false);
       }
       // unmentioned slug should still be in the room
-      since('Expected slugs that weren\'t ignored are still present in the room').
-        expect(slugsInRoom.includes('searchpress/23')).toBe(true);
+      since('Expected slugs that weren\'t ignored are still present in the room')
+        .expect(slugsInRoom.includes('searchpress/23')).toBe(true);
     });
 
     // ignore a couple specific crs
@@ -477,20 +470,20 @@ describe("Code Review", () => {
 
   it('lists all CRs', (done) => {
     populateTestRoomCRs();
-      adapter.on("send", (envelope, strings) => {
-      status='all';
+    adapter.on('send', (envelope, strings) => {
+      status = 'all';
       // test message preface
-      if (status === 'new') {
+      if ('new' === status) {
         expect(strings[0]).toMatch(/^There are pending code reviews\. Any takers\?/igm);
       } else {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
       // that hubot sent back only contains CRs with the correct status
-      code_reviews.room_queues.test_room.forEach(function(cr, i) {
+      code_reviews.room_queues.test_room.forEach((cr, i) => {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
-        var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
-        if(status === cr.status || status === 'all') {
+        const CRFound = 0 <= strings[0].indexOf(`*<${cr.url}|${cr.slug}>*`);
+        if (status === cr.status || 'all' === status) {
           expect(CRFound).toBe(true);
         } else {
           expect(CRFound).toBe(false);
@@ -498,25 +491,25 @@ describe("Code Review", () => {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "hubot list all crs"));
+    adapter.receive(new TextMessage(users[8], 'hubot list all crs'));
   });
 
   it('lists new CRs', (done) => {
     populateTestRoomCRs();
-      adapter.on("send", (envelope, strings) => {
-      status='new';
+    adapter.on('send', (envelope, strings) => {
+      status = 'new';
       // test message preface
-      if (status === 'new') {
+      if ('new' === status) {
         expect(strings[0]).toMatch(/^There are pending code reviews\. Any takers\?/igm);
       } else {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
       // that hubot sent back only contains CRs with the correct status
-      code_reviews.room_queues.test_room.forEach(function(cr, i) {
+      code_reviews.room_queues.test_room.forEach((cr, i) => {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
-        var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
-        if(status === cr.status || status === 'all') {
+        const CRFound = 0 <= strings[0].indexOf(`*<${cr.url}|${cr.slug}>*`);
+        if (status === cr.status || 'all' === status) {
           expect(CRFound).toBe(true);
         } else {
           expect(CRFound).toBe(false);
@@ -524,25 +517,25 @@ describe("Code Review", () => {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "hubot list new crs"));
+    adapter.receive(new TextMessage(users[8], 'hubot list new crs'));
   });
 
   it('lists claimed CRs', (done) => {
     populateTestRoomCRs();
-      adapter.on("send", (envelope, strings) => {
-      status='claimed';
+    adapter.on('send', (envelope, strings) => {
+      status = 'claimed';
       // test message preface
-      if (status === 'new') {
+      if ('new' === status) {
         expect(strings[0]).toMatch(/^There are pending code reviews\. Any takers\?/igm);
       } else {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
       // that hubot sent back only contains CRs with the correct status
-      code_reviews.room_queues.test_room.forEach(function(cr, i) {
+      code_reviews.room_queues.test_room.forEach((cr, i) => {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
-        var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
-        if(status === cr.status || status === 'all') {
+        const CRFound = 0 <= strings[0].indexOf(`*<${cr.url}|${cr.slug}>*`);
+        if (status === cr.status || 'all' === status) {
           expect(CRFound).toBe(true);
         } else {
           expect(CRFound).toBe(false);
@@ -550,25 +543,25 @@ describe("Code Review", () => {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "hubot list claimed crs"));
+    adapter.receive(new TextMessage(users[8], 'hubot list claimed crs'));
   });
 
   it('lists approved CRs', (done) => {
     populateTestRoomCRs();
-      adapter.on("send", (envelope, strings) => {
-      status='approved';
+    adapter.on('send', (envelope, strings) => {
+      status = 'approved';
       // test message preface
-      if (status === 'new') {
+      if ('new' === status) {
         expect(strings[0]).toMatch(/^There are pending code reviews\. Any takers\?/igm);
       } else {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
       // that hubot sent back only contains CRs with the correct status
-      code_reviews.room_queues.test_room.forEach(function(cr, i) {
+      code_reviews.room_queues.test_room.forEach((cr, i) => {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
-        var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
-        if(status === cr.status || status === 'all') {
+        const CRFound = 0 <= strings[0].indexOf(`*<${cr.url}|${cr.slug}>*`);
+        if (status === cr.status || 'all' === status) {
           expect(CRFound).toBe(true);
         } else {
           expect(CRFound).toBe(false);
@@ -576,25 +569,25 @@ describe("Code Review", () => {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "hubot list approved crs"));
+    adapter.receive(new TextMessage(users[8], 'hubot list approved crs'));
   });
 
   it('lists closed CRs', (done) => {
     populateTestRoomCRs();
-      adapter.on("send", (envelope, strings) => {
-      status='closed';
+    adapter.on('send', (envelope, strings) => {
+      status = 'closed';
       // test message preface
-      if (status === 'new') {
+      if ('new' === status) {
         expect(strings[0]).toMatch(/^There are pending code reviews\. Any takers\?/igm);
       } else {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
       // that hubot sent back only contains CRs with the correct status
-      code_reviews.room_queues.test_room.forEach(function(cr, i) {
+      code_reviews.room_queues.test_room.forEach((cr, i) => {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
-        var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
-        if(status === cr.status || status === 'all') {
+        const CRFound = 0 <= strings[0].indexOf(`*<${cr.url}|${cr.slug}>*`);
+        if (status === cr.status || 'all' === status) {
           expect(CRFound).toBe(true);
         } else {
           expect(CRFound).toBe(false);
@@ -602,25 +595,25 @@ describe("Code Review", () => {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "hubot list closed crs"));
+    adapter.receive(new TextMessage(users[8], 'hubot list closed crs'));
   });
 
   it('lists merged CRs', (done) => {
     populateTestRoomCRs();
-      adapter.on("send", (envelope, strings) => {
-      status='merged';
+    adapter.on('send', (envelope, strings) => {
+      status = 'merged';
       // test message preface
-      if (status === 'new') {
+      if ('new' === status) {
         expect(strings[0]).toMatch(/^There are pending code reviews\. Any takers\?/igm);
       } else {
         expect(strings[0]).toMatch(/^Here\'s a list of .* code reviews for you\./igm);
       }
       // loop through the room and make sure the list
       // that hubot sent back only contains CRs with the correct status
-      code_reviews.room_queues.test_room.forEach(function(cr, i) {
+      code_reviews.room_queues.test_room.forEach((cr, i) => {
         // note that the timeago string is checked in 'includes timeago information when listing crs'
-        var CRFound = strings[0].indexOf('*<' + cr.url + '|' + cr.slug +'>*') >= 0;
-        if(status === cr.status || status === 'all') {
+        const CRFound = 0 <= strings[0].indexOf(`*<${cr.url}|${cr.slug}>*`);
+        if (status === cr.status || 'all' === status) {
           expect(CRFound).toBe(true);
         } else {
           expect(CRFound).toBe(false);
@@ -628,22 +621,22 @@ describe("Code Review", () => {
       });
       done();
     });
-      adapter.receive(new TextMessage(users[8], "hubot list merged crs"));
+    adapter.receive(new TextMessage(users[8], 'hubot list merged crs'));
   });
 
   it('includes timeago information when listing crs', (done) => {
-      var statuses = ['new', 'claimed', 'approved', 'closed', 'merged'];
-      var halfHourInMs = 1000 * 60 * 30;
-      // add CRs with different ages and statuses
-      statuses.forEach(function(status, i) {
-        var cr = new CodeReview(users[i], makeSlug(PullRequests[i]), PullRequests[i]);
-        cr.status = status;
-        cr.last_updated += -1 * i * halfHourInMs;
-        code_reviews.add(cr);
-      });
+    const statuses = ['new', 'claimed', 'approved', 'closed', 'merged'];
+    const halfHourInMs = 1000 * 60 * 30;
+    // add CRs with different ages and statuses
+    statuses.forEach((status, i) => {
+      const cr = new CodeReview(users[i], makeSlug(PullRequests[i]), PullRequests[i]);
+      cr.status = status;
+      cr.last_updated += -1 * i * halfHourInMs;
+      code_reviews.add(cr);
+    });
 
-      adapter.on("send", (envelope, strings) => {
-      var crsList = strings[0].split("\n");
+    adapter.on('send', (envelope, strings) => {
+      const crsList = strings[0].split('\n');
       crsList.reverse(); // since we add to queue by unshift() instead of push()
       expect(crsList[0]).toMatch(/added a few seconds ago\)$/);
       expect(crsList[1]).toMatch(/claimed 30 minutes ago\)$/);
@@ -652,20 +645,20 @@ describe("Code Review", () => {
       expect(crsList[4]).toMatch(/merged 2 hours ago\)$/);
       expect(crsList[5]).toMatch(/Here's a list of all code reviews for you.$/);
       done();
-      });
-      adapter.receive(new TextMessage(users[0], "hubot list all crs"));
+    });
+    adapter.receive(new TextMessage(users[0], 'hubot list all crs'));
   });
 
   it('recognizes strings containing emoji', (done) => {
-    //valid comments
+    // valid comments
     [
       ':horse:',
       ':+1:',
-      "nice job!\n:package:\ngo ahead and deploy",
+      'nice job!\n:package:\ngo ahead and deploy',
       ':pineapple::pizza:',
-      'looking good :chart_with_upwards_trend:'
-    ].forEach(function(string) {
-      if(!code_reviews.emoji_regex.test(string)) {
+      'looking good :chart_with_upwards_trend:',
+    ].forEach((string) => {
+      if (! code_reviews.emoji_regex.test(string)) {
         console.log(string);
       }
       expect(code_reviews.emoji_regex.test(string)).toBe(true);
@@ -674,8 +667,8 @@ describe("Code Review", () => {
     [
       '😘',
       '🐩🚢',
-      'nice work 🎉 code'
-    ].forEach(function(string) {
+      'nice work 🎉 code',
+    ].forEach((string) => {
       expect(code_reviews.emoji_unicode_test(string)).toBe(true);
     });
 
@@ -683,8 +676,8 @@ describe("Code Review", () => {
     [
       'this needs some work',
       'note: this:is not finished',
-      "nice job:\nyou:"
-    ].forEach(function(string) {
+      'nice job:\nyou:',
+    ].forEach((string) => {
       expect(code_reviews.emoji_regex.test(string)).toBe(false);
       expect(code_reviews.emoji_unicode_test(string)).toBe(false);
     });
@@ -697,7 +690,7 @@ describe("Code Review", () => {
    */
 
   it('does not allow invalid GitHub event webhooks', (done) => {
-    testWebhook('something_else', {foo: 'bar'}, function(err, res) {
+    testWebhook('something_else', { foo: 'bar' }, (err, res) => {
       expect(res.status).toBe(400);
       expect(res.text).toBe('invalid x-github-event something_else');
       done();
@@ -705,30 +698,30 @@ describe("Code Review", () => {
   });
 
   it('receives GitHub pull_request_review webhook to handle a PR in multiple rooms', (done) => {
-    var rooms = ['alley', 'codereview', 'learnstuff', 'nycoffice'];
-    var approvedUrl = 'https://github.com/alleyinteractive/special/pull/456'
-    var otherUrl = 'https://github.com/alleyinteractive/special/pull/123';
+    const rooms = ['alley', 'codereview', 'learnstuff', 'nycoffice'];
+    const approvedUrl = 'https://github.com/alleyinteractive/special/pull/456';
+    const otherUrl = 'https://github.com/alleyinteractive/special/pull/123';
     // add prs to different rooms
-    rooms.forEach(function(room) {
-      addNewCR(approvedUrl + '/files', {room: room});
-      addNewCR(otherUrl, {room: room});
+    rooms.forEach((room) => {
+      addNewCR(`${approvedUrl}/files`, { room });
+      addNewCR(otherUrl, { room });
     });
 
     // setup the data we want to pretend that Github is sending
-    var requestBody = {
-      pull_request : {html_url : approvedUrl},
-      review : {
-        body : 'Awesome!',
+    const requestBody = {
+      pull_request: { html_url: approvedUrl },
+      review: {
+        body: 'Awesome!',
         state: 'approved',
         user: { login: 'jaredcobb' },
       },
     };
 
     // setup the data we want to pretend that Github is sending
-    var notApprovedRequestBody = {
-      pull_request : {html_url : otherUrl},
-      review : {
-        body : 'Needs some changes',
+    const notApprovedRequestBody = {
+      pull_request: { html_url: otherUrl },
+      review: {
+        body: 'Needs some changes',
         state: 'rejected',
         user: { login: 'mboynes' },
       },
@@ -736,26 +729,26 @@ describe("Code Review", () => {
 
     // expect the approved pull request to be approved in all rooms
     // and the other pull request to be unchanged
-    testWebhook('pull_request_review', requestBody, function(err, res) {
-      expect(res.text).toBe('pull_request_review approved ' + approvedUrl);
-      rooms.forEach(function(room) {
+    testWebhook('pull_request_review', requestBody, (err, res) => {
+      expect(res.text).toBe(`pull_request_review approved ${approvedUrl}`);
+      rooms.forEach((room) => {
         queue = code_reviews.room_queues[room];
         expect(queue.length).toBe(2);
         expect(queue[0].url).toBe(otherUrl);
         expect(queue[0].status).toBe('new');
-        expect(queue[1].url).toBe(approvedUrl + '/files');
+        expect(queue[1].url).toBe(`${approvedUrl}/files`);
         expect(queue[1].status).toBe('approved');
       });
     });
 
-    testWebhook('pull_request_review', notApprovedRequestBody, function(err, res) {
-      expect(res.text).toBe('pull_request_review not yet approved ' + otherUrl);
-      rooms.forEach(function(room) {
+    testWebhook('pull_request_review', notApprovedRequestBody, (err, res) => {
+      expect(res.text).toBe(`pull_request_review not yet approved ${otherUrl}`);
+      rooms.forEach((room) => {
         queue = code_reviews.room_queues[room];
         expect(queue.length).toBe(2);
         expect(queue[0].url).toBe(otherUrl);
         expect(queue[0].status).toBe('new');
-        expect(queue[1].url).toBe(approvedUrl + '/files');
+        expect(queue[1].url).toBe(`${approvedUrl}/files`);
         expect(queue[1].status).toBe('approved');
         done();
       });
@@ -763,11 +756,11 @@ describe("Code Review", () => {
   });
 
   it('DMs user when CR is approved', (done) => {
-    var url = 'https://github.com/alleyinteractive/huron/pull/567';
+    const url = 'https://github.com/alleyinteractive/huron/pull/567';
     addNewCR(url);
 
     // setup the data we want to pretend that Github is sending
-    var requestBody = {
+    const requestBody = {
       pull_request: { html_url: url },
       review: {
         body: 'Nice work thinking through the implications!',
@@ -776,26 +769,26 @@ describe("Code Review", () => {
       },
     };
     adapter.on('send', (envelope, strings) => {
-      expect(strings[0]).toBe('hey ' + envelope.room +
-        '! gfargo approved ' + url +':\nNice work thinking through the implications!');
-      var cr = code_reviews.room_queues.test_room[0];
-      expect(envelope.room).toBe('@' +cr.user.name);
+      expect(strings[0]).toBe(`hey ${envelope.room
+      }! gfargo approved ${url}:\nNice work thinking through the implications!`);
+      const cr = code_reviews.room_queues.test_room[0];
+      expect(envelope.room).toBe(`@${cr.user.name}`);
       expect(cr.url).toBe(url);
       expect(cr.status).toBe('approved');
       done();
     });
 
-    testWebhook('pull_request_review', requestBody, function(err, res) {
-      expect(res.text).toBe('pull_request_review approved ' + url);
+    testWebhook('pull_request_review', requestBody, (err, res) => {
+      expect(res.text).toBe(`pull_request_review approved ${url}`);
     });
   });
 
   it('DMs user when CR isn\'t approved', (done) => {
-    var url = 'https://github.com/alleyinteractive/huron/pull/567';
+    const url = 'https://github.com/alleyinteractive/huron/pull/567';
     addNewCR(url);
 
     // setup the data we want to pretend that Github is sending
-    var requestBody = {
+    const requestBody = {
       pull_request: { html_url: url },
       review: {
         body: 'Spaces. Not tabs.',
@@ -804,17 +797,17 @@ describe("Code Review", () => {
       },
     };
     adapter.on('send', (envelope, strings) => {
-      expect(strings[0]).toBe('hey ' + envelope.room +
-        ', zgreen commented on ' + url +':\nSpaces. Not tabs.');
-      var cr = code_reviews.room_queues.test_room[0];
-      expect(envelope.room).toBe('@' +cr.user.name);
+      expect(strings[0]).toBe(`hey ${envelope.room
+      }, zgreen commented on ${url}:\nSpaces. Not tabs.`);
+      const cr = code_reviews.room_queues.test_room[0];
+      expect(envelope.room).toBe(`@${cr.user.name}`);
       expect(cr.url).toBe(url);
       expect(cr.status).toBe('new');
       done();
     });
 
-    testWebhook('pull_request_review', requestBody, function(err, res) {
-      expect(res.text).toBe('pull_request_review not yet approved ' + url);
+    testWebhook('pull_request_review', requestBody, (err, res) => {
+      expect(res.text).toBe(`pull_request_review not yet approved ${url}`);
     });
   });
 
@@ -828,8 +821,8 @@ describe("Code Review", () => {
 
   it('does not update a new PR to merged', (done) => {
     adapter.on('send', (envelope, strings) => {
-      expect(strings[0]).toBe("*special/456* has been merged but still needs to be reviewed, just fyi.");
-      expect(envelope.room).toBe("test_room");
+      expect(strings[0]).toBe('*special/456* has been merged but still needs to be reviewed, just fyi.');
+      expect(envelope.room).toBe('test_room');
       done();
     });
     testMergeClose('merged', 'new', 'new');
@@ -837,8 +830,8 @@ describe("Code Review", () => {
 
   it('does not update a claimed PR to merged', (done) => {
     adapter.on('send', (envelope, strings) => {
-      expect(strings[0]).toBe("Hey @jaredcobb, *special/456* has been merged but you should keep reviewing.");
-      expect(envelope.room).toBe("test_room");
+      expect(strings[0]).toBe('Hey @jaredcobb, *special/456* has been merged but you should keep reviewing.');
+      expect(envelope.room).toBe('test_room');
       done();
     });
     testMergeClose('merged', 'claimed', 'claimed');
@@ -847,7 +840,7 @@ describe("Code Review", () => {
   it('does not update a new PR to closed', (done) => {
     adapter.on('send', (envelope, strings) => {
       expect(strings[0]).toMatch(/Hey @(\w+), looks like \*special\/456\* was closed on GitHub\. Say `ignore special\/456` to remove it from the queue\./i);
-      expect(envelope.room).toBe("test_room");
+      expect(envelope.room).toBe('test_room');
       done();
     });
     testMergeClose('closed', 'new', 'new');
@@ -856,7 +849,7 @@ describe("Code Review", () => {
   it('does not update a claimed PR to closed', (done) => {
     adapter.on('send', (envelope, strings) => {
       expect(strings[0]).toMatch(/Hey @jaredcobb, \*special\/456\* was closed on GitHub\. Maybe ask @(\w+) if it still needs to be reviewed\./i);
-      expect(envelope.room).toBe("test_room");
+      expect(envelope.room).toBe('test_room');
       done();
     });
     testMergeClose('closed', 'claimed', 'claimed');
@@ -874,8 +867,8 @@ describe("Code Review", () => {
     // add old and new CRs
     addNewCR(PullRequests[0]);
     addNewCR(PullRequests[1]);
-    addNewCR(PullRequests[2], {room: 'otherRoom'});
-    addNewCR(PullRequests[3], {room: 'otherRoom'});
+    addNewCR(PullRequests[2], { room: 'otherRoom' });
+    addNewCR(PullRequests[3], { room: 'otherRoom' });
     code_reviews.room_queues.test_room[1].last_updated -= (code_reviews.garbage_expiration + 1000);
     code_reviews.room_queues.otherRoom[1].last_updated -= (code_reviews.garbage_expiration + 1000);
 
@@ -901,17 +894,17 @@ describe("Code Review", () => {
    * @param function callback Takes error and result arguments
    */
   function testWebhook(eventType, requestBody, callback) {
-  request(robot.router.listen())
-    .post('/hubot/hubot-code-review')
-    .set({
-      'Content-Type' : 'application/json',
-      'X-Github-Event' : eventType,
-    })
-    .send(requestBody)
-    .end(function(err, res) {
-      expect(err).toBeFalsy();
-      callback(err, res);
-    });
+    request(robot.router.listen())
+      .post('/hubot/hubot-code-review')
+      .set({
+        'Content-Type': 'application/json',
+        'X-Github-Event': eventType,
+      })
+      .send(requestBody)
+      .end((err, res) => {
+        expect(err).toBeFalsy();
+        callback(err, res);
+      });
   }
 
   /**
@@ -922,20 +915,20 @@ describe("Code Review", () => {
    *    string expectedStatus
    */
   function testCommentText(args, done) {
-    var url = 'https://github.com/alleyinteractive/huron/pull/567';
+    const url = 'https://github.com/alleyinteractive/huron/pull/567';
     addNewCR(url);
 
     // setup the data we want to pretend that Github is sending
-    var requestBody = {
-      issue : {html_url : url},
-      comment : {
-        body : args.comment,
-        user : {login : 'bcampeau'}
-      }
+    const requestBody = {
+      issue: { html_url: url },
+      comment: {
+        body: args.comment,
+        user: { login: 'bcampeau' },
+      },
     };
 
     // not approved
-    testWebhook('issue_comment', requestBody, function(err, res) {
+    testWebhook('issue_comment', requestBody, (err, res) => {
       expect(res.text).toBe(args.expectedRes + url);
       expect(code_reviews.room_queues.test_room[0].status).toBe(args.expectedStatus);
       done();
@@ -950,23 +943,23 @@ describe("Code Review", () => {
    * @param function done Optional done() function for the test
    */
   function testMergeClose(githubStatus, localStatus, expectedStatus, done) {
-    var updatedUrl = 'https://github.com/alleyinteractive/special/pull/456';
+    const updatedUrl = 'https://github.com/alleyinteractive/special/pull/456';
     addNewCR(updatedUrl);
     code_reviews.room_queues.test_room[0].status = localStatus;
     code_reviews.room_queues.test_room[0].reviewer = 'jaredcobb';
 
     // setup the data we want to pretend that Github is sending
-    var requestBody = {
-      action : 'closed',
-      pull_request : {
-        merged : githubStatus === 'merged',
-        html_url : updatedUrl
-      }
+    const requestBody = {
+      action: 'closed',
+      pull_request: {
+        merged: 'merged' === githubStatus,
+        html_url: updatedUrl,
+      },
     };
 
     // expect the closed pull request to be closed in all rooms
     // and the other pull request to be unchanged
-    testWebhook('pull_request', requestBody, function(err, res) {
+    testWebhook('pull_request', requestBody, (err, res) => {
       expect(code_reviews.room_queues.test_room[0].status).toBe(expectedStatus);
       if (done) {
         done();
@@ -990,10 +983,10 @@ describe("Code Review", () => {
    * @param int randExclude Optional index in users array to exclude from submitters
    */
   function addNewCR(url, userMeta, randExclude) {
-    var submitter = util.getRandom(users, randExclude).value;
+    const submitter = util.getRandom(users, randExclude).value;
     if (userMeta) {
       // shallow "extend" submitter
-      Object.keys(userMeta).forEach(function(key) {
+      Object.keys(userMeta).forEach((key) => {
         submitter[key] = userMeta[key];
       });
     }
@@ -1007,11 +1000,11 @@ describe("Code Review", () => {
    * @return int|null Number of CRs matching status, or null if room not found
    */
   function roomStatusCount(room, status) {
-    if (!code_reviews.room_queues[room]) {
+    if (! code_reviews.room_queues[room]) {
       return null;
     }
-    var counter = 0;
-    code_reviews.room_queues[room].forEach(function(cr) {
+    let counter = 0;
+    code_reviews.room_queues[room].forEach((cr) => {
       if (cr.status === status) {
         counter++;
       }
@@ -1019,21 +1012,21 @@ describe("Code Review", () => {
     return counter;
   }
 
-  function populateTestRoomCRs(){
-    var statuses = {
-      new : [],
+  function populateTestRoomCRs() {
+    const statuses = {
+      new: [],
       claimed: [],
       approved: [],
       closed: [],
-      merged: []
-    }
+      merged: [],
+    };
     // add a bunch of new CRs
     PullRequests.forEach((url, i) => {
       addNewCR(url);
     });
 
     // make sure there's at least one CR with each status
-    code_reviews.room_queues.test_room.forEach(function(review, i) {
+    code_reviews.room_queues.test_room.forEach((review, i) => {
       if (i < Object.keys(statuses).length) {
         status = Object.keys(statuses)[i];
         // update the CR's status
