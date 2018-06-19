@@ -115,8 +115,11 @@ class CodeReviewKarma
   # @return none
   flush_monthly_scores: ->
     console.log "CodeReviewKarma.flush_monthly_scores: resetting monthly_scores..."
-    @monthly_scores = {}
-    @update_redis()
+    # Explicitly delete all monthly score entries
+    if Object.keys(@monthly_scores).length
+      for user of @monthly_scores
+        delete @monthly_scores[user]
+        delete @robot.brain.data.code_review_karma.monthly_scores[user]
 
   # Announce top reviewers this month:
   #   Most reviews (up to three)
