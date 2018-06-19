@@ -1,6 +1,6 @@
 {
   "name": "hubot-code-review",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "author": "Alley Interactive <ops+hubot@alleyinteractive.com>",
   "description": "A Hubot script for GitHub code review on Slack",
   "main": "index.coffee",
@@ -51,7 +51,7 @@
     "eslint-plugin-react": "^7.4.0",
     "hubot-mock-adapter": "^1.0.0",
     "jasmine-custom-message": "^0.8.2",
-    "jasmine-node": "^1.14.5",
+    "jasmine-node": "^1.14.6",
     "supertest": "~3.0.0"
   }
 }

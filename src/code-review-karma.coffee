@@ -54,9 +54,19 @@ module.exports = (robot) ->
         msg.send "I could not remove #{user} from the CR rankings"
 
     # coffeelint: disable=max_line_length
-    robot.respond /(?:what (?:is|are) the )?monthly (?:code review|cr) (?:rankings|leaderboard)\??/i, (msg) ->
+    robot.respond /(?:what (?:is|are) the )?monthly (?:code review|cr) (?:rankings|leaderboard|scores?)\??/i, (msg) ->
     # coffeelint: enable=max_line_length
       code_review_karma.monthly_rankings(msg)
+
+    # Flush all the scores
+    robot.respond /flush cr scores, really really/i, (msg) ->
+      code_review_karma.flush_scores()
+      msg.send "This house is clear"
+
+    # Flush monthly scores
+    robot.respond /flush monthly cr scores, really really/i, (msg) ->
+      code_review_karma.flush_monthly_scores()
+      msg.send "This house is clear"
 
     robot.respond /merge ([-_a-z0-9]+)(?:'s?)? cr scores into ([-_a-z0-9]+)/i, (msg) ->
       old_user = msg.match[1]

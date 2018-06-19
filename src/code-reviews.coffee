@@ -240,11 +240,6 @@ module.exports = (robot) ->
     code_reviews.flush_queues()
     msg.send "This house is clear"
 
-  # Flush all the scores
-  robot.respond /flush cr scores, really really/i, (msg) ->
-    code_reviews.flush_scores()
-    msg.send "This house is clear"
-
   # Display JSON of all CR queues
   robot.respond /debug the cr queue ?(?:for #?([a-z0-9\-_]+))?$/i, (msg) ->
     if !msg.match[1]
