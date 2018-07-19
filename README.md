@@ -27,8 +27,9 @@ Once the review is complete, a GitHub webhook listener catches approvals and Dir
 
 ## Requirements
 
-You'll need [Hubot](http://hubot.github.com/) and
-[hubot-slack](https://github.com/slackapi/hubot-slack) > 4
+* [Hubot](http://hubot.github.com/)
+* [hubot-slack](https://github.com/slackapi/hubot-slack) ^4
+* [coffeescript](https://coffeescript.org/) ^1
 
 ## Installation via NPM
 

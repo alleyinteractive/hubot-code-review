@@ -31,7 +31,8 @@
     "punycode": "^2.1.0"
   },
   "peerDependencies": {
-    "hubot-slack": "^4.3.1"
+    "hubot-slack": "^4.3.1",
+    "coffeescript": "^1.12.7"
   },
   "engines": {
     "node": "6",
