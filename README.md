@@ -107,7 +107,7 @@ _Note that some commands require direct @hubot, some don't, and some work either
 
 *Code review statuses*
 
-	new			PR has just been added to the queue, no one is on it.
+	new		PR has just been added to the queue, no one is on it.
 	claimed		Someone is on this PR
 	approved	PR was approved. Requires GitHub webhook.
 	merged		PR was merged and closed. Requires GitHub webhook.
