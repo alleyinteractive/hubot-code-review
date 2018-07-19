@@ -23,6 +23,7 @@
     "lint-tests": "eslint -c .eslintrc --ext .js ./test"
   },
   "dependencies": {
+    "coffeescript": "^1.12.7",
     "githubot": "^1.0.1",
     "moment": "^2.19.3",
     "node-schedule": "^1.2.5",
@@ -31,8 +32,7 @@
     "punycode": "^2.1.0"
   },
   "peerDependencies": {
-    "hubot-slack": "^4.3.1",
-    "coffeescript": "^1.12.7"
+    "hubot-slack": "^4.3.1"
   },
   "engines": {
     "node": "6",
@@ -43,7 +43,6 @@
   },
   "license": "GPL-3.0",
   "devDependencies": {
-    "coffee-script": "^1.12.7",
     "coffeelint": "^2.0.7",
     "eslint": "^4.11.0",
     "eslint-config-airbnb": "^16.1.0",
