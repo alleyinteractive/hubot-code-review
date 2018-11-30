@@ -653,7 +653,7 @@ class CodeReviews
           # PR was closed before anyone claimed it
           newStatus = 'closed'
           message = "Hey @#{cr.user.name}, looks like the PR for *#{cr.slug}* has some" +
-          " (changes requested) on GitHub. I've removed `#{cr.slug}` from the queue," +
+          " changes requested on GitHub. I've removed `#{cr.slug}` from the queue," +
           " but you should add it back when you need another review."
 
         # update CR, send message to room, add to results

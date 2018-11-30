@@ -255,8 +255,6 @@ module.exports = (robot) ->
       res.send 'x-github-event is required'
       return
 
-    console.log(req.body);
-
     # Check if PR was approved (via emoji in issue_comment body)
     if req.headers['x-github-event'] is 'issue_comment'
       if ((process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE?) and
