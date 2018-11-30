@@ -650,11 +650,11 @@ class CodeReviews
               newStatus = status
               message = false
         else if status is "changes_requested"
-          # PR was closed before anyone claimed it
+          # PR was reviewed with changes_requested before anyone claimed it in-channel
           newStatus = 'closed'
           message = "Hey @#{cr.user.name}, looks like the PR for *#{cr.slug}* has some" +
-          " changes requested on GitHub. I've removed `#{cr.slug}` from the queue," +
-          " but you should add it back when you need another review."
+          " changes requested on GitHub. I've removed `#{cr.slug}` from the queue,  but you" +
+          " should add it back with a `hubot reset #{cr.slug}` when you need another review."
 
         # update CR, send message to room, add to results
         if newStatus
