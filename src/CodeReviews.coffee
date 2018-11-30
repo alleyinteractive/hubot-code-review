@@ -610,7 +610,8 @@ class CodeReviews
 
   # Selectively update local cr status when a merge, close, or PR rejection event happens on GitHub
   # @param string url URL of GitHub PR
-  # @param string|bool status Status of pull request on Github, either 'merged', 'closed', or 'changes_requested'
+  # @param string|bool status Status of pull request on Github, either:
+  #   'merged', 'closed', or 'changes_requested'
   # @return array Array of updated CRs; may be empty array if URL not found
   handle_close: (url, status) ->
     slug = @matches_to_slug(@pr_url_regex.exec url)
