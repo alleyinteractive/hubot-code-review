@@ -608,11 +608,11 @@ class CodeReviews
         # continue loop in case same PR is in multiple rooms
     return crs_found
 
-  # Selectively update local cr status when a merge or close event happens on GitHub
+  # Selectively update local cr status when a merge, close, or PR rejection event happens on GitHub
   # @param string url URL of GitHub PR
-  # @param string|bool github_status Status of pull request on Github, either 'merged' or 'closed'
+  # @param string|bool status Status of pull request on Github, either 'merged', 'closed', or 'changes_requested'
   # @return array Array of updated CRs; may be empty array if URL not found
-  handle_merge_close: (url, github_status) ->
+  handle_close: (url, status) ->
     slug = @matches_to_slug(@pr_url_regex.exec url)
     crs_found = []
     for room, queue of @room_queues
@@ -620,7 +620,7 @@ class CodeReviews
       unless i == false
         cr = @room_queues[room][i]
         # Handle merged
-        if github_status is "merged"
+        if status is "merged"
           switch cr.status
             # PR was merged before anyone is on it
             when "new"
@@ -632,9 +632,9 @@ class CodeReviews
               " but you should keep reviewing."
               newStatus = false
             else
-              newStatus = github_status
+              newStatus = status
               message = false
-        else if github_status is "closed"
+        else if status is "closed"
           switch cr.status
             # PR was closed before anyone claimed it
             when "new"
@@ -647,8 +647,14 @@ class CodeReviews
               message = "Hey @#{cr.reviewer}, *#{cr.slug}* was closed on GitHub." +
               " Maybe ask @#{cr.user.name} if it still needs to be reviewed."
             else
-              newStatus = github_status
+              newStatus = status
               message = false
+        else if status is "changes_requested"
+          # PR was closed before anyone claimed it
+          newStatus = 'closed'
+          message = "Hey @#{cr.user.name}, looks like the PR for *#{cr.slug}* has some" +
+          " (changes requested) on GitHub. I've removed `#{cr.slug}` from the queue," +
+          " but you should add it back when you need another review."
 
         # update CR, send message to room, add to results
         if newStatus

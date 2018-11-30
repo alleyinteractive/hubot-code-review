@@ -25,10 +25,10 @@
   "dependencies": {
     "coffeescript": "^1.12.7",
     "githubot": "^1.0.1",
-    "moment": "^2.19.3",
-    "node-schedule": "^1.2.5",
     "hubot": "^2.19.0",
     "hubot-redis-brain": "^0.0.4",
+    "moment": "^2.19.3",
+    "node-schedule": "^1.2.5",
     "punycode": "^2.1.0"
   },
   "peerDependencies": {
