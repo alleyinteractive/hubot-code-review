@@ -286,7 +286,7 @@ module.exports = (robot) ->
       if req.body.action is 'closed'
         # update CRs
         status = if req.body.pull_request.merged then 'merged' else 'closed'
-        updated = code_reviews.handle_merge_close req.body.pull_request.html_url, status
+        updated = code_reviews.handle_close req.body.pull_request.html_url, status
         # build response message
         if updated.length
           response = "set status of #{updated[0].slug} to "
@@ -313,6 +313,21 @@ module.exports = (robot) ->
             req.body.pull_request.html_url,
             req.body.review.user.login,
             req.body.review.body
+          )
+        else if req.body.review.state is 'changes_requested'
+          response = "pull_request_review changes requested #{req.body.pull_request.html_url}"
+
+          # Send the changes requested comment to the submitter
+          if req.body.review.body?
+            code_reviews.comment_cr_by_url(
+              req.body.pull_request.html_url,
+              req.body.review.user.login,
+              req.body.review.body
+            )
+          # Close up the PR and notify the submitter to resubmit when changes are made
+          code_reviews.handle_close(
+            req.body.pull_request.html_url,
+            'changes_requested'
           )
         else
           response = "pull_request_review not yet approved #{req.body.pull_request.html_url}"

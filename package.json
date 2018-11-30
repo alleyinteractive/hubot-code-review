@@ -1,7 +1,7 @@
 {
   "name": "hubot-code-review",
-  "version": "0.6.5",
-  "author": "Alley Interactive <ops+hubot@alleyinteractive.com>",
+  "version": "0.6.6",
+  "author": "Alley Interactive <ops+hubot@alley.co>",
   "description": "A Hubot script for GitHub code review on Slack",
   "main": "index.coffee",
   "repository": {
@@ -25,10 +25,10 @@
   "dependencies": {
     "coffeescript": "^1.12.7",
     "githubot": "^1.0.1",
-    "moment": "^2.19.3",
-    "node-schedule": "^1.2.5",
     "hubot": "^2.19.0",
     "hubot-redis-brain": "^0.0.4",
+    "moment": "^2.19.3",
+    "node-schedule": "^1.2.5",
     "punycode": "^2.1.0"
   },
   "peerDependencies": {
