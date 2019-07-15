@@ -4,7 +4,7 @@
 # @return String human-readable name of the channel
 module.exports = (msg) ->
   if msg.robot.adapterName is "slack"
-    robot.http("https://slack.com/api/conversations.info")
+    msg.robot.http("https://slack.com/api/conversations.info")
       .query({
         token: process.env.HUBOT_SLACK_TOKEN
         channel: msg.message.room
