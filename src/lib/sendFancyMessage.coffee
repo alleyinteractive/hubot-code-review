@@ -3,6 +3,9 @@
   # @param room String name of room
   # @param attachments https://api.slack.com/docs/message-attachments
   # @return none
+
+async = require 'async'
+
 module.exports = (robot, room, attachments, text) ->
   if robot.adapterName isnt "slack"
     fallback_text = text || ''
@@ -10,16 +13,20 @@ module.exports = (robot, room, attachments, text) ->
       fallback_text += "\n#{attachment.fallback}"
     robot.messageRoom room, fallback_text.replace(/\n$/, "")
   else
-    # Working around a Slack for Android bug 2016-08-30 by supplying
-    # text attribute outside of attachment array to allow previews
     if text?
-      robot.send { room: room },
-        as_user: true
-        channel: room
-        text: text
-        attachments: attachments
+      try
+        robot.send { room: room },
+          as_user: true
+          channel: room
+          text: text
+          attachments: attachments
+      catch sendErr
+        robot.logger.error("Unable to send message #{text} to room: #{room}: ", sendErr)
     else
-      robot.send { room: room },
-        as_user: true
-        channel: room
-        attachments: attachments
+      try
+        robot.send { room: room },
+          as_user: true
+          channel: room
+          attachments: attachments
+      catch sendErr
+        robot.logger.error("Unable to send message to room: #{room}: ", sendErr)

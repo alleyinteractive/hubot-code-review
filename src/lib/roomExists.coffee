@@ -4,28 +4,44 @@
 # @return bool true/false whether the slack room exists
 module.exports = (roomName, robot) ->
   if robot.adapterName is "slack"
-
-    robot.http("https://slack.com/api/conversations.list")
-      .query({
-        token: process.env.HUBOT_SLACK_TOKEN
-        limit: 1000
-        # TODO: use cursor-based pagination
-        types: "public_channel,private_channel"
+    cursor = null # When cursor is null, Slack provides first 'page'
+    async.whilst (() ->
+      ! (cursor is '') # Slack uses an empty string cursor to indicate no more
+    ), ((step) =>
+      # Async query conversations.list
+      robot.adapter.client.web.conversations.list({
+        limit: 1000,
+        #types: "public_channel,private_channel,im,mpim",
+        types: "public_channel",
+        exclude_archived: true,
+        cursor
       })
-      .get() (err, response, body) =>
-        channels = JSON.parse(body)
-        valid_channel_ids = channels.channels
-          .filter((each) => (! each.is_archived and each.is_member))
-          .map((each) => (each.id))
-        valid_channel_names = channels.channels
-          .filter((each) => (! each.is_archived and each.is_member))
-          .map((each) => (each.name))
+      .then (body) =>
+        if body.ok
+          # Set new cursor 'page'
+          cursor = body.response_metadata.next_cursor
 
-        if roomName not in valid_channel_ids and
-        roomName not in valid_channel_names
-          return false
+          valid_channel_ids = body.channels
+            .filter((each) -> ((! each.is_archived and each.is_member) or
+            (each.is_im is true)))
+            .map((each) -> (each.id))
+          valid_channel_names = body.channels
+            .filter((each) -> ((! each.is_archived and each.is_member) or
+            (each.is_im is true)))
+            .map((each) -> (each.name))
+          found = (roomName in valid_channel_ids or roomName in valid_channel_names)
+          if found
+            # Stop looking
+            cursor = ''
+
+          step(found)
         else
-          return true
+          @robot.logger.error "Unable to call conversations.list:", body
+    ), (found) ->
+      if not found
+        return false
+      else return true
+
   else
     # assume room exists for alternate adapters (eg. local development)
     return true
