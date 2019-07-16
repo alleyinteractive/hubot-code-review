@@ -3,9 +3,6 @@
   # @param room String name of room
   # @param attachments https://api.slack.com/docs/message-attachments
   # @return none
-
-async = require 'async'
-
 module.exports = (robot, room, attachments, text) ->
   if robot.adapterName isnt "slack"
     fallback_text = text || ''
@@ -21,7 +18,7 @@ module.exports = (robot, room, attachments, text) ->
           text: text
           attachments: attachments
       catch sendErr
-        robot.logger.error("Unable to send message #{text} to room: #{room}: ", sendErr)
+        robot.logger.error "Unable to send message to room: #{room}: ", sendErr, attachments
     else
       try
         robot.send { room: room },
@@ -29,4 +26,4 @@ module.exports = (robot, room, attachments, text) ->
           channel: room
           attachments: attachments
       catch sendErr
-        robot.logger.error("Unable to send message to room: #{room}: ", sendErr)
+        robot.logger.error "Unable to send message to room: #{room}: ", sendErr, attachments
