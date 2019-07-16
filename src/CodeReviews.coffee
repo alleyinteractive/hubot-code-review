@@ -80,7 +80,7 @@ class CodeReviews
           if ! cr.last_updated? || (cr.last_updated + @garbage_expiration) < Date.now()
             @remove_from_room room, i
             @garbage_last_collection++
-    console.log "CodeReviews.collect garbage found #{@garbage_last_collection} items"
+    @robot.logger.info "CodeReviews.collect garbage found #{@garbage_last_collection} items"
 
   # Update Redis store of CR queues
   #
@@ -349,7 +349,6 @@ class CodeReviews
   send_list: (room, verbose = false, status = 'new') ->
     # Look for CRs with the correct status
     message = @list room, verbose, status
-
     intro_text = message["pretext"]
     if message["cr"].length != 0 or verbose is true
       # To handle the special slack case of only showing 5 lines in an attachment,
@@ -369,6 +368,7 @@ class CodeReviews
           text: message
           mrkdwn_in: ["text"]
           color: color
+      # Send the formatted slack message with attachments
       sendFancyMessage @robot, room, attachments, intro_text
 
   # Recurring reminder when there are *unclaimed* CRs
@@ -495,7 +495,7 @@ class CodeReviews
           @send_submission_confirmation(cr, msg, notification_string)
 
       github.handleErrors (response) =>
-        console.log "Unable to connect to GitHub's API for #{cr.slug}." +
+        @robot.logger.info "Unable to connect to GitHub's API for #{cr.slug}." +
         " Ensure you have access. Response: #{response.statusCode}"
         @add cr
         @send_submission_confirmation(cr, msg, notification_string)
