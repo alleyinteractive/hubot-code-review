@@ -27,7 +27,7 @@ Once the review is complete, a GitHub webhook listener catches approvals and Dir
 
 ## Requirements
 
-* [Hubot](http://hubot.github.com/)
+* [Hubot](http://hubot.github.com/) ^3
 * [hubot-slack](https://github.com/slackapi/hubot-slack) ^4
 
 ## Installation via NPM
