@@ -398,6 +398,12 @@ class CodeReviews
                 "an hour, someone get on this. :siren:\n_Reminding hourly from now on_"
               else if minutes > 60
                 @robot.send { room: room }, "This is an hourly reminder."
+          else
+            # If room doesn't exist, clear out the queue for it
+            @robot.logger.warning "Unable to find room #{roomName}; removing from room_queue"
+            delete @room_queues[room]
+            @update_redis()
+
         @reminder_count++ unless rooms_have_new_crs is false
         if minutes >= 60
           nag_delay = 60 # set to one hour intervals
