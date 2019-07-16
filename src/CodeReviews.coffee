@@ -464,7 +464,8 @@ class CodeReviews
     if (notification_string)? and notification_string.length
       notify_name = notification_string[0...] || null
     if (notify_name)?
-      @notify_channel(cr, msgRoomName(msg), notify_name)
+      msgRoomName msg, (room_name) =>
+        @notify_channel(cr, room_name, notify_name)
 
     # If our submitter provided a notification individual/channel, say so.
     if (notify_name)?
