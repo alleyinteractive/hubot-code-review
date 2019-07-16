@@ -7,7 +7,7 @@ CR_Middleware = require './CodeReviewsMiddleware'
 CodeReviewKarma = require './CodeReviewKarma'
 sendFancyMessage = require './lib/sendFancyMessage'
 msgRoomName = require './lib/msgRoomName'
-roomExists = require './lib/roomExists'
+roomList = require './lib/roomList'
 EmojiDataParser = require './lib/EmojiDataParser'
 
 
@@ -182,7 +182,6 @@ class CodeReviews
   # @retun none
   add: (cr) ->
     return unless cr.user.room
-    return unless roomExists(cr.user.room, @robot)
     @room_queues[cr.user.room] ||= []
     @room_queues[cr.user.room].unshift(cr) if false == @find_slug_index(cr.user.room, cr.slug)
     @update_redis()
@@ -383,32 +382,36 @@ class CodeReviews
     clearTimeout @current_timeout if @current_timeout
     if Object.keys(@room_queues).length > 0
       rooms_have_new_crs = false
-      trigger = =>
-        for room of @room_queues
-          # exclude non-existent or newly archived rooms
-          if roomExists(room, @robot)
-            active_crs = @list room
-            if active_crs["cr"].length > 0
-              rooms_have_new_crs = true
-              @send_list room
-              if minutes >= 60 and # Equal to or longer than one hour
-              minutes < 120 and # Less than 2 hours
-              (minutes %% 60) < nag_delay # Is the first occurrence after an hour
-                @robot.send { room: room }, "@here: :siren: This queue has been active for " +
-                "an hour, someone get on this. :siren:\n_Reminding hourly from now on_"
-              else if minutes > 60
-                @robot.send { room: room }, "This is an hourly reminder."
-          else
-            # If room doesn't exist, clear out the queue for it
-            @robot.logger.warning "Unable to find room #{roomName}; removing from room_queue"
-            delete @room_queues[room]
-            @update_redis()
 
-        @reminder_count++ unless rooms_have_new_crs is false
-        if minutes >= 60
-          nag_delay = 60 # set to one hour intervals
-        @queue(nag_delay)
-      @current_timeout = setTimeout(trigger, nag_delay * 60000) # milliseconds in a minute
+      # Get roomList to exclude non-existent or newly archived
+      #  rooms (unless we're not using Slack)
+      roomList @robot, (valid_rooms) =>
+        trigger = =>
+          for room of @room_queues
+            if room in valid_rooms or
+            robot.adapterName isnt "slack"
+              active_crs = @list room
+              if active_crs["cr"].length > 0
+                rooms_have_new_crs = true
+                @send_list room
+                if minutes >= 60 and # Equal to or longer than one hour
+                minutes < 120 and # Less than 2 hours
+                (minutes %% 60) < nag_delay # Is the first occurrence after an hour
+                  @robot.send { room: room }, "@here: :siren: This queue has been active for " +
+                  "an hour, someone get on this. :siren:\n_Reminding hourly from now on_"
+                else if minutes > 60
+                  @robot.send { room: room }, "This is an hourly reminder."
+            else
+              # If room doesn't exist, clear out the queue for it
+              @robot.logger.warning "Unable to find room #{roomName}; removing from room_queue"
+              delete @room_queues[room]
+              @update_redis()
+
+          @reminder_count++ unless rooms_have_new_crs is false
+          if minutes >= 60
+            nag_delay = 60 # set to one hour intervals
+          @queue(nag_delay)
+        @current_timeout = setTimeout(trigger, nag_delay * 60000) # milliseconds in a minute
 
   # Get CR slug from PR URL regex matches
   #

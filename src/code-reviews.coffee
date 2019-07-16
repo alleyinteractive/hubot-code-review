@@ -20,7 +20,7 @@ module.exports = (robot) ->
   enqueue_code_review = (msg) ->
     url = msg.match[1]
     slug = code_reviews.matches_to_slug msg.match
-    msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
       if slug
         cr = new CodeReview msg.message.user, slug, url
         # Specific override for human readable cr.user.room
@@ -68,28 +68,27 @@ module.exports = (robot) ->
   # @param slugs matching slugs
   # @param msg message to reply to
   # @return none
-  single_matching_cr = (slug_to_search_for, msg, status = false, no_reply = false) ->
+  single_matching_cr = (slug_to_search_for, room_name, msg, status = false, no_reply = false) ->
     # search for matching slugs whether a fragment or full slug is provided
-    msgRoomName msg, (room_name) =>
-      found_crs = code_reviews.search_room_by_slug room_name, slug_to_search_for, status
+    found_crs = code_reviews.search_room_by_slug room_name, slug_to_search_for, status
 
-      # no matches
-      if found_crs.length is 0
-        unless no_reply
-          status_prs = if status then "#{status} " else ''
-          msg.send "Sorry, I couldn't find any #{status_prs}PRs" +
-          " in this room matching `#{slug_to_search_for}`."
-        return
-      # multiple matches
-      else if found_crs.length > 1
-        foundSlugs = for cr in found_crs
-          cr.slug
-        unless no_reply
-          send_be_more_specific foundSlugs, msg
-        return
-      # There's a single matching slug in this room to redo
-      else
-        return found_crs[0]
+    # no matches
+    if found_crs.length is 0
+      unless no_reply
+        status_prs = if status then "#{status} " else ''
+        msg.send "Sorry, I couldn't find any #{status_prs}PRs" +
+        " in this room matching `#{slug_to_search_for}`."
+      return
+    # multiple matches
+    else if found_crs.length > 1
+      foundSlugs = for cr in found_crs
+        cr.slug
+      unless no_reply
+        send_be_more_specific foundSlugs, msg
+      return
+    # There's a single matching slug in this room to redo
+    else
+      return found_crs[0]
 
   dequeue_code_review = (cr, reviewer, msg) ->
     if cr and cr.slug
@@ -121,7 +120,7 @@ module.exports = (robot) ->
   # Claim first PR in queue by directly addressing hubot
   robot.respond /(?:([-_a-z0-9]+) is )?on it/i, (msg) ->
     reviewer = msg.match[1] or msg.message.user.name
-    msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
       cr = code_reviews.claim_first room_name, reviewer
       dequeue_code_review cr, reviewer, msg
 
@@ -129,7 +128,7 @@ module.exports = (robot) ->
   # Note the this is a `hear` listener and previous is a `respond`
   robot.hear /^(?:([-_a-z0-9]+) is )?on it$/, (msg) ->
     reviewer = msg.match[1] or msg.message.user.name
-    msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
       cr = code_reviews.claim_first room_name, reviewer
       dequeue_code_review cr, reviewer, msg
 
@@ -140,7 +139,7 @@ module.exports = (robot) ->
   robot.hear /^on \*$/i, (msg) ->
     msg.emote ":tornado2:"
     reviewer = msg.message.user.name
-    msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
       until false is cr = code_reviews.claim_first room_name, reviewer
         dequeue_code_review cr, reviewer, msg
 
@@ -155,20 +154,20 @@ module.exports = (robot) ->
     slug = msg.match[2]
     return if slug.toLowerCase() is 'it'
 
-    unclaimed_cr = single_matching_cr(slug, msg, status = "new")
-    if (unclaimed_cr)?
-      msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
+      unclaimed_cr = single_matching_cr(slug, room_name, msg, status = "new")
+      if (unclaimed_cr)?
         code_reviews.claim_by_slug room_name, unclaimed_cr.slug, reviewer
         dequeue_code_review unclaimed_cr, reviewer, msg
 
-    # none of the matches have "new" status
-    else
-      cr = single_matching_cr(slug, msg, status = false, no_output = true)
-      # When someone attempts to claim a PR
-      # that was already reviewed, merged, or closed outside of the queue
-      if (cr)?
-        response = "It looks like *#{cr.slug}* (@#{cr.user.name}) has already been #{cr.status}"
-        msg.send response
+      # none of the matches have "new" status
+      else
+        cr = single_matching_cr(slug, room_name, msg, status = false, no_output = true)
+        # When someone attempts to claim a PR
+        # that was already reviewed, merged, or closed outside of the queue
+        if (cr)?
+          response = "It looks like *#{cr.slug}* (@#{cr.user.name}) has already been #{cr.status}"
+          msg.send response
 
   ###
   @command hubot (nm|ignore) cool-repo/123
@@ -180,9 +179,9 @@ module.exports = (robot) ->
     slug = msg.match[1]
     return if slug.toLowerCase() is 'it'
 
-    found_ignore_cr = single_matching_cr(slug, msg)
-    if (found_ignore_cr)?
-      msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
+      found_ignore_cr = single_matching_cr(slug, room_name, msg)
+      if (found_ignore_cr)?
         code_reviews.remove_by_slug room_name, found_ignore_cr.slug
         #decrement scores
         code_review_karma.decr_score found_ignore_cr.user.name, 'take'
@@ -196,7 +195,7 @@ module.exports = (robot) ->
   @desc    Delete most recently added PR from the queue regardless of status
   ###
   robot.respond /(?:\s*)(?:nm|ignore)(?:\s*)$/i, (msg) ->
-    msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
       cr = code_reviews.remove_last_new room_name
       if cr and cr.slug
         code_review_karma.decr_score cr.user.name, 'take'
@@ -211,9 +210,9 @@ module.exports = (robot) ->
   @desc    Allow another review _without_ decrementing previous reviewer's score
   ###
   robot.respond /(?:redo)(?: ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+))/i, (msg) ->
-    found_redo_cr = single_matching_cr(msg.match[1], msg)
-    if (found_redo_cr)?
-      msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
+      found_redo_cr = single_matching_cr(msg.match[1], room_name, msg)
+      if (found_redo_cr)?
         index = code_reviews.find_slug_index room_name, found_redo_cr.slug
         code_reviews.reset_cr code_reviews.room_queues[room_name][index]
         msg.send "You got it, #{found_redo_cr.slug} is ready for a new review."
@@ -223,17 +222,17 @@ module.exports = (robot) ->
   @desc    Reset CR status to new/unclaimed _and_ decrement reviewer's score
   ###
   robot.respond /(unclaim|reset)(?: ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+))?/i, (msg) ->
-    found_reset_cr = single_matching_cr(msg.match[2], msg)
-    if (found_reset_cr)?
-      # decrement reviewers CR score
-      if found_reset_cr.reviewer
-        code_review_karma.decr_score found_reset_cr.reviewer, 'give'
+    msgRoomName msg, (room_name) ->
+      found_reset_cr = single_matching_cr(msg.match[2], room_name, msg)
+      if (found_reset_cr)?
+        # decrement reviewers CR score
+        if found_reset_cr.reviewer
+          code_review_karma.decr_score found_reset_cr.reviewer, 'give'
 
-      msgRoomName msg, (room_name) =>
-        index = code_reviews.find_slug_index room_name, found_reset_cr.slug
-        code_reviews.reset_cr code_reviews.room_queues[room_name][index]
-        msg.match[1] += 'ed' if msg.match[1].toLowerCase() is 'unclaim'
-        msg.send "You got it, I've #{msg.match[1]} *#{found_reset_cr.slug}* in the queue."
+          index = code_reviews.find_slug_index room_name, found_reset_cr.slug
+          code_reviews.reset_cr code_reviews.room_queues[room_name][index]
+          msg.match[1] += 'ed' if msg.match[1].toLowerCase() is 'unclaim'
+          msg.send "You got it, I've #{msg.match[1]} *#{found_reset_cr.slug}* in the queue."
 
   ###
   @command hubot: list crs
@@ -243,7 +242,7 @@ module.exports = (robot) ->
   ###
   robot.respond /list(?: (all|new|claimed|approved|closed|merged))? CRs/i, (msg) ->
     status = msg.match[1] || 'new'
-    msgRoomName msg, (room_name) =>
+    msgRoomName msg, (room_name) ->
       code_reviews.send_list room_name, true, status
 
   # Flush all CRs in all rooms
