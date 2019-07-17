@@ -106,7 +106,7 @@ class CodeReviewKarma
   # Reset all scores
   # @return none
   flush_scores: ->
-    console.log "CodeReviewKarma.flush_scores: resetting all scores..."
+    @robot.logger.info "CodeReviewKarma.flush_scores: resetting all scores..."
     @scores = {}
     @monthly_scores = {}
     @update_redis()
@@ -114,7 +114,7 @@ class CodeReviewKarma
   # Reset monthly scores
   # @return none
   flush_monthly_scores: ->
-    console.log "CodeReviewKarma.flush_monthly_scores: resetting monthly_scores..."
+    @robot.logger.info "CodeReviewKarma.flush_monthly_scores: resetting monthly_scores..."
     # Explicitly delete all monthly score entries
     if Object.keys(@monthly_scores).length
       for user of @monthly_scores

@@ -13,13 +13,19 @@ module.exports = (robot, room, attachments, text) ->
     # Working around a Slack for Android bug 2016-08-30 by supplying
     # text attribute outside of attachment array to allow previews
     if text?
-      robot.send { room: room },
-        as_user: true
-        channel: room
-        text: text
-        attachments: attachments
+      try
+        robot.send { room: room },
+          as_user: true
+          channel: room
+          text: text
+          attachments: attachments
+      catch sendErr
+        robot.logger.error "Unable to send message to room: #{room}: ", sendErr, attachments
     else
-      robot.send { room: room },
-        as_user: true
-        channel: room
-        attachments: attachments
+      try
+        robot.send { room: room },
+          as_user: true
+          channel: room
+          attachments: attachments
+      catch sendErr
+        robot.logger.error "Unable to send message to room: #{room}: ", sendErr, attachments

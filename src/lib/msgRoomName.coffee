@@ -2,9 +2,15 @@
 # for hubot-slack's breaking change from 3->4 of using ID instead of name
 # @param  {msg Object}
 # @return String human-readable name of the channel
-module.exports = (msg) ->
+module.exports = (msg, next) ->
   if msg.robot.adapterName is "slack"
-    channel = msg.robot.adapter.client.rtm.dataStore.getChannelGroupOrDMById(msg.message.room)
-    return channel.name
+    msg.robot.http("https://slack.com/api/conversations.info")
+      .query({
+        token: process.env.HUBOT_SLACK_TOKEN
+        channel: msg.message.room
+      })
+      .get() (err, response, body) =>
+        channel = JSON.parse(body)
+        next channel.channel.name
   else
-    return msg.message.room
+    next msg.message.room

@@ -7,7 +7,7 @@ CR_Middleware = require './CodeReviewsMiddleware'
 CodeReviewKarma = require './CodeReviewKarma'
 sendFancyMessage = require './lib/sendFancyMessage'
 msgRoomName = require './lib/msgRoomName'
-roomExists = require './lib/roomExists'
+roomList = require './lib/roomList'
 EmojiDataParser = require './lib/EmojiDataParser'
 
 
@@ -80,7 +80,7 @@ class CodeReviews
           if ! cr.last_updated? || (cr.last_updated + @garbage_expiration) < Date.now()
             @remove_from_room room, i
             @garbage_last_collection++
-    console.log "CodeReviews.collect garbage found #{@garbage_last_collection} items"
+    @robot.logger.info "CodeReviews.collect garbage found #{@garbage_last_collection} items"
 
   # Update Redis store of CR queues
   #
@@ -182,7 +182,6 @@ class CodeReviews
   # @retun none
   add: (cr) ->
     return unless cr.user.room
-    return unless roomExists(cr.user.room, @robot)
     @room_queues[cr.user.room] ||= []
     @room_queues[cr.user.room].unshift(cr) if false == @find_slug_index(cr.user.room, cr.slug)
     @update_redis()
@@ -349,7 +348,6 @@ class CodeReviews
   send_list: (room, verbose = false, status = 'new') ->
     # Look for CRs with the correct status
     message = @list room, verbose, status
-
     intro_text = message["pretext"]
     if message["cr"].length != 0 or verbose is true
       # To handle the special slack case of only showing 5 lines in an attachment,
@@ -369,6 +367,7 @@ class CodeReviews
           text: message
           mrkdwn_in: ["text"]
           color: color
+      # Send the formatted slack message with attachments
       sendFancyMessage @robot, room, attachments, intro_text
 
   # Recurring reminder when there are *unclaimed* CRs
@@ -383,26 +382,36 @@ class CodeReviews
     clearTimeout @current_timeout if @current_timeout
     if Object.keys(@room_queues).length > 0
       rooms_have_new_crs = false
-      trigger = =>
-        for room of @room_queues
-          # exclude non-existent or newly archived rooms
-          if roomExists(room, @robot)
-            active_crs = @list room
-            if active_crs["cr"].length > 0
-              rooms_have_new_crs = true
-              @send_list room
-              if minutes >= 60 and # Equal to or longer than one hour
-              minutes < 120 and # Less than 2 hours
-              (minutes %% 60) < nag_delay # Is the first occurrence after an hour
-                @robot.send { room: room }, "@here: :siren: This queue has been active for " +
-                "an hour, someone get on this. :siren:\n_Reminding hourly from now on_"
-              else if minutes > 60
-                @robot.send { room: room }, "This is an hourly reminder."
-        @reminder_count++ unless rooms_have_new_crs is false
-        if minutes >= 60
-          nag_delay = 60 # set to one hour intervals
-        @queue(nag_delay)
-      @current_timeout = setTimeout(trigger, nag_delay * 60000) # milliseconds in a minute
+
+      # Get roomList to exclude non-existent or newly archived
+      #  rooms (unless we're not using Slack)
+      roomList @robot, (valid_rooms) =>
+        trigger = =>
+          for room of @room_queues
+            if room in valid_rooms or
+            robot.adapterName isnt "slack"
+              active_crs = @list room
+              if active_crs["cr"].length > 0
+                rooms_have_new_crs = true
+                @send_list room
+                if minutes >= 60 and # Equal to or longer than one hour
+                minutes < 120 and # Less than 2 hours
+                (minutes %% 60) < nag_delay # Is the first occurrence after an hour
+                  @robot.send { room: room }, "@here: :siren: This queue has been active for " +
+                  "an hour, someone get on this. :siren:\n_Reminding hourly from now on_"
+                else if minutes > 60
+                  @robot.send { room: room }, "This is an hourly reminder."
+            else
+              # If room doesn't exist, clear out the queue for it
+              @robot.logger.warning "Unable to find room #{roomName}; removing from room_queue"
+              delete @room_queues[room]
+              @update_redis()
+
+          @reminder_count++ unless rooms_have_new_crs is false
+          if minutes >= 60
+            nag_delay = 60 # set to one hour intervals
+          @queue(nag_delay)
+        @current_timeout = setTimeout(trigger, nag_delay * 60000) # milliseconds in a minute
 
   # Get CR slug from PR URL regex matches
   #
@@ -464,7 +473,8 @@ class CodeReviews
     if (notification_string)? and notification_string.length
       notify_name = notification_string[0...] || null
     if (notify_name)?
-      @notify_channel(cr, msgRoomName(msg), notify_name)
+      msgRoomName msg, (room_name) =>
+        @notify_channel(cr, room_name, notify_name)
 
     # If our submitter provided a notification individual/channel, say so.
     if (notify_name)?
@@ -495,7 +505,7 @@ class CodeReviews
           @send_submission_confirmation(cr, msg, notification_string)
 
       github.handleErrors (response) =>
-        console.log "Unable to connect to GitHub's API for #{cr.slug}." +
+        @robot.logger.info "Unable to connect to GitHub's API for #{cr.slug}." +
         " Ensure you have access. Response: #{response.statusCode}"
         @add cr
         @send_submission_confirmation(cr, msg, notification_string)
