@@ -74,17 +74,19 @@ file type lookups or DMs when your PR is approved/rejected require 2 things:
 - If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type information on PR submission. Check out the instructions for configuring
 [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
-- Set ```HUBOT_CODE_REVIEW_REMINDER_MINUTES``` to customize the number of minutes between pending code review prompts during the first hour of inactivity (the default is 5, and the effective max is 60). Note that hourly reminders will still take effect after the first 60 minutes.
+- ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment on the PR that includes one or more emoji conveys PR approval
+and will DM the submitter accordingly.
+
+- Set ```HUBOT_CODE_REVIEW_FILE_EXTENSIONS``` to a space separated list of file extensions (_default "coffee css html js jsx md php rb scss sh txt yml"_) to configure what file types you prefer to group together in the ```HUBOT_CODE_REVIEW_META``` information alongside the PR slug in channel. Note that this requires a [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
 - Set ```HUBOT_CODE_REVIEW_KARMA_DISABLED``` to `true` to prevent Hubot from listening for any
 [code review karma](/docs/code-review-karma.md) commands.
 
 - Set ```HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM``` to automatically display a monthly resetting code review leaderboard to a particular room (for more info, check out the [code review karma](/docs/code-review-karma.md) docs)
 
-- ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment on the PR that includes one or more emoji conveys PR approval
-and will DM the submitter accordingly.
+- Set ```HUBOT_CODE_REVIEW_META``` to one of [ `files`, `title`, `none`, `both` (_default `files`_) ] to configure whether to display the pull request title, file types, or both alongside the PR slug in channel. Note that this requires a [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
-
+- Set ```HUBOT_CODE_REVIEW_REMINDER_MINUTES``` to customize the number of minutes between pending code review prompts during the first hour of inactivity (the default is 5, and the effective max is 60). Note that hourly reminders will still take effect after the first 60 minutes.
 ## Usage
 
 `hubot help crs` - See a help document explaining how to use.
