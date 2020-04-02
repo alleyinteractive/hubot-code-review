@@ -536,18 +536,35 @@ class CodeReviews
     for item in files
       file_types.push(item.filename.replace /.*?\.((?:(?:min|bundle)\.)?[a-z]+$)/, "$1")
     for type in file_types
-      switch type
-        # When it's a file type we care about, count it specifically
-        when 'coffee', 'css', 'html', 'js', 'md', 'php', 'rb', 'scss', 'sh', 'txt', 'yml'
-          if counts["#{type}"]?
-            counts["#{type}"] = counts["#{type}"] + 1
-          else
-            counts["#{type}"] = 1
+      if process.env.HUBOT_CODE_REVIEW_FILE_EXTENSIONS
+        extensions_we_care_about = process.env.HUBOT_CODE_REVIEW_FILE_EXTENSIONS.split(' ')
+      else
+        extensions_we_care_about =
+        [
+          'coffee',
+          'css',
+          'html',
+          'js',
+          'jsx',
+          'md',
+          'php',
+          'rb',
+          'scss',
+          'sh',
+          'txt',
+          'yml'
+        ]
+      # When it's a file type we care about, count it specifically
+      if extensions_we_care_about.includes(type)
+        if counts["#{type}"]?
+          counts["#{type}"] = counts["#{type}"] + 1
         else
-          if other_file_types["other"]?
-            other_file_types["other"] = other_file_types["other"] + 1
-          else
-            other_file_types["other"] = 1
+          counts["#{type}"] = 1
+      else
+        if other_file_types["other"]?
+          other_file_types["other"] = other_file_types["other"] + 1
+        else
+          other_file_types["other"] = 1
     # Format and append the counts to the file_types_string
     for k, v of counts
       file_types_string += " `#{k} (#{v})`"
