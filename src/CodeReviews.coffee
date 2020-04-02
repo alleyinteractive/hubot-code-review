@@ -496,9 +496,16 @@ class CodeReviews
       github_api_files = @url_to_github_api_url_files(cr.url)
       github_api_pr = @url_to_github_api_url_pr(cr.url)
       github.get (github_api_files), (files) =>
-        files_string = @pr_file_types files
-        cr.extra_info = files_string || ''
+        files_string = ( @pr_file_types files ) || ''
         github.get (github_api_pr), (pr) =>
+          # Populate extra PR metadata based on HUBOT_CODE_REVIEW_META
+          cr.extra_info = switch process.env.HUBOT_CODE_REVIEW_META
+            when 'both' then "_#{pr.title}_ #{files_string}"
+            when 'files' then files_string
+            when 'title' then pr.title
+            when 'none' then ''
+            else files_string # Default to files behavior pre 1.0
+
           if (pr)? and (pr.user)? and (pr.user.login)?
             cr.github_pr_submitter = pr.user.login
           @add cr
