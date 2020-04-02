@@ -9,7 +9,7 @@ module.exports = (msg, next) ->
         token: process.env.HUBOT_SLACK_TOKEN
         channel: msg.message.room
       })
-      .get() (err, response, body) =>
+      .get() (err, response, body) ->
         channel = JSON.parse(body)
         next channel.channel.name
   else
