@@ -32,10 +32,10 @@
     "punycode": "^2.1.0"
   },
   "peerDependencies": {
-    "hubot-slack": "^4.3.1"
+    "hubot-slack": "^4"
   },
   "engines": {
-    "node": "10",
+    "node": "12",
     "npm": "6"
   },
   "bugs": {
@@ -43,15 +43,16 @@
   },
   "license": "GPL-3.0",
   "devDependencies": {
-    "coffeelint": "^2.0.7",
-    "eslint": "^4.11.0",
-    "eslint-config-airbnb": "^16.1.0",
-    "eslint-plugin-import": "~2.14.0",
-    "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.4.0",
+    "coffeelint": "^2.1.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb": "^18.0.1",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.19.0",
+    "eslint-plugin-react-hooks": "^2.5.0",
     "hubot-mock-adapter": "~1.1.1",
     "jasmine-custom-message": "^0.8.2",
-    "jasmine-node": "^1.14.6",
+    "jasmine-node": "^3.0.0",
     "supertest": "~3.0.0"
   }
 }
