@@ -318,12 +318,12 @@ class CodeReviews
         if cr.status == status || status == 'all'
           fromNowLabel = if cr.status is 'new' then 'added' else cr.status
           fromNowLabel += ' '
-          timeString = fromNowLabel + moment(cr.last_updated).fromNow()
+          timeString = '(' + fromNowLabel + moment(cr.last_updated).fromNow() + ')'
           if (cr.extra_info? && cr.extra_info.length != 0)
-            extra_info_text = "#{cr.extra_info}, " + timeString
+            extra_info_text = "#{cr.extra_info} " + timeString
           else
             extra_info_text = timeString
-          reviews["cr"].push "*<#{cr.url}|#{cr.slug}>* (#{extra_info_text})"
+          reviews["cr"].push "*<#{cr.url}|#{cr.slug}>* #{extra_info_text}"
     # Return a list of the CRs we found
     if reviews["cr"].length != 0
       if status == 'new'
@@ -500,9 +500,9 @@ class CodeReviews
         github.get (github_api_pr), (pr) =>
           # Populate extra PR metadata based on HUBOT_CODE_REVIEW_META
           cr.extra_info = switch process.env.HUBOT_CODE_REVIEW_META
-            when 'both' then "_#{pr.title}_ #{files_string}"
+            when 'both' then "_#{pr.title}_\n#{files_string}"
             when 'files' then files_string
-            when 'title' then pr.title
+            when 'title' then "_#{pr.title}_\n"
             when 'none' then ''
             else files_string # Default to files behavior pre 1.0
 
