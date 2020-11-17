@@ -3,14 +3,14 @@
 // Allows 'since' custom messages for unit test failures
 require('jasmine-custom-message');
 
-let path = require('path'),
-  Robot = require('../node_modules/hubot/src/robot'),
-  TextMessage = require('../node_modules/hubot/src/message').TextMessage,
-  util = require('./lib/util'),
-  Users = require('./data/users'),
-  PullRequests = require('./data/prs'),
-  CodeReview = require('../src/CodeReview'),
-  request = require('supertest');
+const path = require('path');
+const request = require('supertest');
+const Robot = require('../node_modules/hubot/src/robot');
+const { TextMessage } = require('../node_modules/hubot/src/message');
+const util = require('./lib/util');
+const Users = require('./data/users');
+const PullRequests = require('./data/prs');
+const CodeReview = require('../src/CodeReview');
 schedule = require('node-schedule');
 
 /**
@@ -638,11 +638,11 @@ describe('Code Review', () => {
     adapter.on('send', (envelope, strings) => {
       const crsList = strings[0].split('\n');
       crsList.reverse(); // since we add to queue by unshift() instead of push()
-      expect(crsList[0]).toMatch(/added a few seconds ago\)$/);
-      expect(crsList[1]).toMatch(/claimed 30 minutes ago\)$/);
-      expect(crsList[2]).toMatch(/approved an hour ago\)$/);
-      expect(crsList[3]).toMatch(/closed 2 hours ago\)$/);
-      expect(crsList[4]).toMatch(/merged 2 hours ago\)$/);
+      expect(crsList[0]).toMatch(/added a few seconds ago/);
+      expect(crsList[1]).toMatch(/claimed 30 minutes ago/);
+      expect(crsList[2]).toMatch(/approved an hour ago/);
+      expect(crsList[3]).toMatch(/closed 2 hours ago/);
+      expect(crsList[4]).toMatch(/merged 2 hours ago/);
       expect(crsList[5]).toMatch(/Here's a list of all code reviews for you.$/);
       done();
     });
