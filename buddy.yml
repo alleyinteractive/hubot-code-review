@@ -1,0 +1,42 @@
+- pipeline: "Test all PRs"
+  trigger_mode: "ON_EVERY_PUSH"
+  ref_name: "refs/pull/*"
+  ref_type: "WILDCARD"
+  priority: "NORMAL"
+  fail_on_prepare_env_warning: true
+  trigger_condition: "ALWAYS"
+  actions:
+  - action: "npm ci"
+    type: "BUILD"
+    working_directory: "/buddy/hubot-code-review"
+    docker_image_name: "library/node"
+    docker_image_tag: "12"
+    execute_commands:
+    - "npm ci --cache .npm"
+    volume_mappings:
+    - "/:/buddy/hubot-code-review"
+    trigger_condition: "ALWAYS"
+    shell: "BASH"
+  - action: "Execute: npm run lint"
+    type: "BUILD"
+    working_directory: "/buddy/hubot-code-review"
+    docker_image_name: "library/node"
+    docker_image_tag: "12"
+    execute_commands:
+    - "npm run lint"
+    volume_mappings:
+    - "/:/buddy/hubot-code-review"
+    trigger_condition: "ALWAYS"
+    shell: "BASH"
+    run_next_parallel: true
+  - action: "Execute: npm run test"
+    type: "BUILD"
+    working_directory: "/buddy/hubot-code-review"
+    docker_image_name: "library/node"
+    docker_image_tag: "12"
+    execute_commands:
+    - "npm run test"
+    volume_mappings:
+    - "/:/buddy/hubot-code-review"
+    trigger_condition: "ALWAYS"
+    shell: "BASH"
