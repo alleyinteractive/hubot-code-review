@@ -389,7 +389,7 @@ class CodeReviews
         trigger = =>
           for room of @room_queues
             if room in valid_rooms or
-            robot.adapterName isnt "slack"
+            @robot.adapterName isnt "slack"
               active_crs = @list room
               if active_crs["cr"].length > 0
                 rooms_have_new_crs = true
@@ -403,7 +403,7 @@ class CodeReviews
                   @robot.send { room: room }, "This is an hourly reminder."
             else
               # If room doesn't exist, clear out the queue for it
-              @robot.logger.warning "Unable to find room #{roomName}; removing from room_queue"
+              @robot.logger.warning "Unable to find room #{room}; removing from room_queue"
               delete @room_queues[room]
               @update_redis()
 

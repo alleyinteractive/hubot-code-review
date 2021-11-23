@@ -269,8 +269,9 @@ module.exports = (robot) ->
     if req.headers['x-github-event'] is 'issue_comment'
       if ((process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE?) and
       process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE)
-        if code_reviews.emoji_regex.test(req.body.comment.body) or
-        code_reviews.emoji_unicode_test(req.body.comment.body)
+        if (code_reviews.emoji_regex.test(req.body.comment.body) or
+        code_reviews.emoji_unicode_test(req.body.comment.body)) and
+        req.body.comment.user.type != 'Bot'
           code_reviews.approve_cr_by_url(
             req.body.issue.html_url,
             req.body.comment.user.login,
