@@ -74,8 +74,7 @@ file type lookups or DMs when your PR is approved/rejected require 2 things:
 - If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type information on PR submission. Check out the instructions for configuring
 [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
-- ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment on the PR that includes one or more emoji conveys PR approval
-and will DM the submitter accordingly.
+- ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment (excluding a `comment.user.type` of `Bot`) on the PR that includes one or more emoji conveys PR approval and will DM the submitter accordingly.
 
 - Set ```HUBOT_CODE_REVIEW_FILE_EXTENSIONS``` to a space separated list of file extensions (_default "coffee css html js jsx md php rb scss sh txt yml"_) to configure what file types you prefer to group together in the ```HUBOT_CODE_REVIEW_META``` information alongside the PR slug in channel. Note that this requires a [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
