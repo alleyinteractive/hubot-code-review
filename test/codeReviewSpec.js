@@ -822,7 +822,7 @@ describe('Code Review', () => {
   it('does not update a new PR to merged', (done) => {
     adapter.on('send', (envelope, strings) => {
       expect(strings[0]).toBe('*special/456* has been merged but still needs to be reviewed, just fyi.');
-      expect(envelope.room).toBe('test_room');
+      expect(envelope.room).toBe('@jaredcobb');
       done();
     });
     testMergeClose('merged', 'new', 'new');
@@ -831,7 +831,7 @@ describe('Code Review', () => {
   it('does not update a claimed PR to merged', (done) => {
     adapter.on('send', (envelope, strings) => {
       expect(strings[0]).toBe('Hey @jaredcobb, *special/456* has been merged but you should keep reviewing.');
-      expect(envelope.room).toBe('test_room');
+      expect(envelope.room).toBe('@jaredcobb');
       done();
     });
     testMergeClose('merged', 'claimed', 'claimed');
@@ -840,7 +840,7 @@ describe('Code Review', () => {
   it('does not update a new PR to closed', (done) => {
     adapter.on('send', (envelope, strings) => {
       expect(strings[0]).toMatch(/Hey @(\w+), looks like \*special\/456\* was closed on GitHub\. Say `ignore special\/456` to remove it from the queue\./i);
-      expect(envelope.room).toBe('test_room');
+      expect(envelope.room).toMatch(/@(\w+)/i);
       done();
     });
     testMergeClose('closed', 'new', 'new');
@@ -849,7 +849,7 @@ describe('Code Review', () => {
   it('does not update a claimed PR to closed', (done) => {
     adapter.on('send', (envelope, strings) => {
       expect(strings[0]).toMatch(/Hey @jaredcobb, \*special\/456\* was closed on GitHub\. Maybe ask @(\w+) if it still needs to be reviewed\./i);
-      expect(envelope.room).toBe('test_room');
+      expect(envelope.room).toBe('@jaredcobb');
       done();
     });
     testMergeClose('closed', 'claimed', 'claimed');
