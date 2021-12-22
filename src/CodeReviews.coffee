@@ -141,7 +141,7 @@ class CodeReviews
     attachments.push
       fallback: "#{cr.url} could use your :eyes: Remember to claim it in ##{origin_room}"
       text: "*<#{cr.url}|#{cr.slug}>* could use your :eyes: Remember to claim it" +
-      " in <https://alleyinteractive.slack.com/archives/#{origin_room}|##{origin_room}>"
+      " in <https://slack.com/app_redirect?channel=#{origin_room}|##{origin_room}>"
       mrkdwn_in: ["text"]
       color: "#575757"
     sendFancyMessage @robot, channel_to_notify, attachments
@@ -593,7 +593,7 @@ class CodeReviews
   #
   # @param string url URL of PR on GitHub
   # @param string commenter GitHub username of person who approved
-  # @param string string comment Full text of comment
+  # @param string comment Full text of comment
   # @return none
   comment_cr_by_url: (url, commenter, comment) ->
     cr_list = @update_cr_by_url url
@@ -654,6 +654,7 @@ class CodeReviews
       i = @find_slug_index room, slug
       unless i == false
         cr = @room_queues[room][i]
+        messageReceiver = cr.reviewer
         # Handle merged
         if status is "merged"
           switch cr.status
@@ -676,6 +677,7 @@ class CodeReviews
               newStatus = false
               message = "Hey @#{cr.user.name}, looks like *#{cr.slug}* was closed on GitHub." +
               " Say `ignore #{cr.slug}` to remove it from the queue."
+              messageReceiver = cr.user.name
             # PR was closed after someone claimed it but before it was approved
             when "claimed"
               newStatus = false
@@ -687,15 +689,18 @@ class CodeReviews
         else if status is "changes_requested"
           # PR was reviewed with changes_requested before anyone claimed it in-channel
           newStatus = 'closed'
-          message = "Hey @#{cr.user.name}, looks like the PR for *#{cr.slug}* has some" +
-          " changes requested on GitHub. I've removed `#{cr.slug}` from the queue,  but you" +
-          " should add it back with a `hubot reset #{cr.slug}` when you need another review."
+          message = "Hey @#{cr.user.name}, looks like the PR for *#{cr.slug}* over in" +
+          " <https://slack.com/app_redirect?channel=#{room}|##{room}> has some changes" +
+          " requested on GitHub. I've removed `#{cr.slug}` from the queue,  but you should" +
+          " add it back with a `hubot reset #{cr.slug}` when you need another review."
+          console.log(message)
+          messageReceiver = cr.user.name
 
         # update CR, send message to room, add to results
         if newStatus
           @update_cr @room_queues[room][i], newStatus
         if message
-          @robot.messageRoom room, message
+          @robot.messageRoom '@' + messageReceiver, message
         crs_found.push @room_queues[room][i]
     # return results
     return crs_found
