@@ -141,7 +141,7 @@ class CodeReviews
     attachments.push
       fallback: "#{cr.url} could use your :eyes: Remember to claim it in ##{origin_room}"
       text: "*<#{cr.url}|#{cr.slug}>* could use your :eyes: Remember to claim it" +
-      " in <https://alleyinteractive.slack.com/archives/#{origin_room}|##{origin_room}>"
+      " in <https://slack.com/app_redirect?channel=#{origin_room}|##{origin_room}>"
       mrkdwn_in: ["text"]
       color: "#575757"
     sendFancyMessage @robot, channel_to_notify, attachments
