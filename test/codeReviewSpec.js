@@ -861,7 +861,7 @@ describe('Code Review', () => {
 
   it('collects the garbage', (done) => {
     // should start with job scheduled but nothing collected
-    expect(code_reviews.garbage_job.pendingInvocations().length).toBe(1);
+    expect(code_reviews.garbage_job.pendingInvocations.length).toBe(1);
     expect(code_reviews.garbage_last_collection).toBe(0);
 
     // add old and new CRs
