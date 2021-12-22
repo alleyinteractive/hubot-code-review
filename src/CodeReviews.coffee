@@ -689,9 +689,11 @@ class CodeReviews
         else if status is "changes_requested"
           # PR was reviewed with changes_requested before anyone claimed it in-channel
           newStatus = 'closed'
-          message = "Hey @#{cr.user.name}, looks like the PR for *#{cr.slug}* has some" +
-          " changes requested on GitHub. I've removed `#{cr.slug}` from the queue,  but you" +
-          " should add it back with a `hubot reset #{cr.slug}` when you need another review."
+          message = "Hey @#{cr.user.name}, looks like the PR for *#{cr.slug}* over in" +
+          " <https://slack.com/app_redirect?channel=#{room}|##{room}> has some changes" +
+          " requested on GitHub. I've removed `#{cr.slug}` from the queue,  but you should" +
+          " add it back with a `hubot reset #{cr.slug}` when you need another review."
+          console.log(message)
           messageReceiver = cr.user.name
 
         # update CR, send message to room, add to results
