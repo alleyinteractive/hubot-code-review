@@ -4,15 +4,16 @@ slackTeamId = false
 #
 # https://api.slack.com/methods/team.info
 #
+# @param {Object} robot The hubot robot object.
 # @return Promise<String|Null> The Slack Team ID hubot is connected to.
-module.exports = (msg, next) -> new Promise (resolve, reject) ->
+module.exports = (robot) -> new Promise (resolve, reject) ->
   # Use the already-resolved value.
   if slackTeamId != false
     resolve slackTeamId
     return
 
-  if msg.robot.adapterName is "slack"
-    msg.robot.http("https://slack.com/api/team.info")
+  if robot.adapterName is "slack"
+    robot.http("https://slack.com/api/team.info")
       .query({
         token: process.env.HUBOT_SLACK_TOKEN
       })

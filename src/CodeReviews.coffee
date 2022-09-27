@@ -137,7 +137,7 @@ class CodeReviews
   # @param String origin_room string of origin room
   # @param String channel_to_notify string of the user/room to notify
   notify_channel: (cr, origin_room, channel_to_notify) ->
-    slackTeamId.then (teamId) ->
+    slackTeamId(@robot).then (teamId) ->
       if teamId?
         channel_uri = "slack://app?team=#{teamId}&id=#{channel_to_notify}"
       else
