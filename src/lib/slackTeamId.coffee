@@ -1,13 +1,13 @@
-slackTeamId = null
+slackTeamId = false
 
 # Return the Slack Team ID hubot is connected to
 #
 # https://api.slack.com/methods/team.info
 #
-# @return String The Slack Team ID hubot is connected to
+# @return String|Null The Slack Team ID hubot is connected to
 module.exports = (msg, next) -> new Promise (resolve, reject) ->
   # Use the already-resolved value.
-  if slackTeamId != null
+  if slackTeamId != false
     resolve slackTeamId
     return
 
@@ -17,9 +17,9 @@ module.exports = (msg, next) -> new Promise (resolve, reject) ->
         token: process.env.HUBOT_SLACK_TOKEN
       })
       .get() (err, response, body) ->
-        channel = JSON.parse(body)
-        slackTeamId = body.team.id
-        resolve body.team.id
+        payload = JSON.parse(body)
+        slackTeamId = payload.team.id
+        resolve payload.team.id
   else
-    slackTeamId = false
-    resolve false
+    slackTeamId = null
+    resolve null
