@@ -4,7 +4,7 @@ slackTeamId = false
 #
 # https://api.slack.com/methods/team.info
 #
-# @return String|Null The Slack Team ID hubot is connected to
+# @return Promise<String|Null> The Slack Team ID hubot is connected to.
 module.exports = (msg, next) -> new Promise (resolve, reject) ->
   # Use the already-resolved value.
   if slackTeamId != false
