@@ -9,7 +9,7 @@ sendFancyMessage = require './lib/sendFancyMessage'
 msgRoomName = require './lib/msgRoomName'
 roomList = require './lib/roomList'
 EmojiDataParser = require './lib/EmojiDataParser'
-
+slackTeamId = require './lib/slackTeamId'
 
 class CodeReviews
   constructor: (@robot) ->
@@ -137,14 +137,20 @@ class CodeReviews
   # @param String origin_room string of origin room
   # @param String channel_to_notify string of the user/room to notify
   notify_channel: (cr, origin_room, channel_to_notify) ->
-    attachments = []
-    attachments.push
-      fallback: "#{cr.url} could use your :eyes: Remember to claim it in ##{origin_room}"
-      text: "*<#{cr.url}|#{cr.slug}>* could use your :eyes: Remember to claim it" +
-      " in <https://slack.com/app_redirect?channel=#{origin_room}|##{origin_room}>"
-      mrkdwn_in: ["text"]
-      color: "#575757"
-    sendFancyMessage @robot, channel_to_notify, attachments
+    slackTeamId.then (teamId) ->
+      if teamId?
+        channel_uri = "slack://app?team=#{teamId}&id=#{channel_to_notify}"
+      else
+        channel_uri = "https://slack.com/app_redirect?channel=#{origin_room}"
+
+      attachments = []
+      attachments.push
+        fallback: "#{cr.url} could use your :eyes: Remember to claim it in ##{origin_room}"
+        text: "*<#{cr.url}|#{cr.slug}>* could use your :eyes: Remember to claim it" +
+        " in <#{channel_uri}|##{origin_room}>"
+        mrkdwn_in: ["text"]
+        color: "#575757"
+      sendFancyMessage @robot, channel_to_notify, attachments
 
   # Find index of slug in a room's CR queue
   #
