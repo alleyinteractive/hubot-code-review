@@ -20,7 +20,7 @@ class CodeReviews
       if matches
         @github_url = matches[0]
     @pr_url_regex = ///
-      ^(https?:\/\/#{@github_url}\/([^\/]+)\/([^\/]+)\/pull\/(\d+))(?:\/files)?\/?(\s+[#|@]?[0-9a-z_-]+)?\s*$
+      ^(https?:\/\/#{@github_url}\/([^\/]+)\/([^\/]+)\/pull\/(\d+))(?:\/files)?\/?(?:\s+<?([#|@]?[0-9a-z_-]+)(?:\|>)?)?\s*$
     ///i
     @room_queues = {}
     @current_timeout = null
