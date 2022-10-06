@@ -20,7 +20,7 @@ class CodeReviews
       if matches
         @github_url = matches[0]
     @pr_url_regex = ///
-      ^(https?:\/\/#{@github_url}\/([^\/]+)\/([^\/]+)\/pull\/(\d+))(?:\/files)?\/?(\s+[#|@]?[0-9a-z_-]+)?\s*$
+      ^(https?:\/\/#{@github_url}\/([^\/]+)\/([^\/]+)\/pull\/(\d+))(?:\/files)?\/?(?:\s+<?([#|@]?[0-9a-z_-]+)(?:\|>)?)?\s*$
     ///i
     @room_queues = {}
     @current_timeout = null
@@ -477,8 +477,12 @@ class CodeReviews
 
     # If our submitter provided a notification individual/channel, say so.
     if (notify_name)?
+      if notify_name.match(/^#/) # It's a channel, wrap as a link
+        notify_link = "<#{notify_name}|>"
+
       msg.send "*#{cr.slug}* is now in the code review queue," +
-      " and #{notify_name} has been notified."
+      " and #{notify_link || notify_name} has been notified."
+
     else
       msg.send "*#{cr.slug}* is now in the code review queue." +
       " Let me know if anyone starts reviewing this."
