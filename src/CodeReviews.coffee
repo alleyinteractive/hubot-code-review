@@ -477,8 +477,12 @@ class CodeReviews
 
     # If our submitter provided a notification individual/channel, say so.
     if (notify_name)?
+      if notify_name.match(/^#/) # It's a channel, wrap as a link
+        notify_link = "<#{notify_name}|>"
+
       msg.send "*#{cr.slug}* is now in the code review queue," +
-      " and #{notify_name} has been notified."
+      " and #{notify_link || notify_name} has been notified."
+
     else
       msg.send "*#{cr.slug}* is now in the code review queue." +
       " Let me know if anyone starts reviewing this."
