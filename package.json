@@ -26,7 +26,7 @@
     "coffeescript": "^1.12.7",
     "githubot": "^1.0.1",
     "hubot": "^3.3.2",
-    "hubot-redis-brain": "github:hubotio/hubot-redis-brain#2ab8963",
+    "hubot-redis-brain": "https://github.com/hubotio/hubot-redis-brain#2ab8963",
     "moment": "^2.29.1",
     "node-schedule": "^2.1.0",
     "punycode": "^2.1.1"
