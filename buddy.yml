@@ -10,7 +10,7 @@
     type: "BUILD"
     working_directory: "/buddy/hubot-code-review"
     docker_image_name: "library/node"
-    docker_image_tag: "12"
+    docker_image_tag: "16"
     execute_commands:
     - "npm ci --cache .npm"
     volume_mappings:
@@ -21,7 +21,7 @@
     type: "BUILD"
     working_directory: "/buddy/hubot-code-review"
     docker_image_name: "library/node"
-    docker_image_tag: "12"
+    docker_image_tag: "16"
     execute_commands:
     - "npm run lint"
     volume_mappings:
@@ -33,7 +33,7 @@
     type: "BUILD"
     working_directory: "/buddy/hubot-code-review"
     docker_image_name: "library/node"
-    docker_image_tag: "12"
+    docker_image_tag: "16"
     execute_commands:
     - "npm run test"
     volume_mappings:

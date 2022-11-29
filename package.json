@@ -1,6 +1,6 @@
 {
   "name": "hubot-code-review",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "author": "Alley Interactive <ops+hubot@alley.co>",
   "description": "A Hubot script for GitHub code review on Slack",
   "main": "index.coffee",
@@ -26,7 +26,7 @@
     "coffeescript": "^1.12.7",
     "githubot": "^1.0.1",
     "hubot": "^3.3.2",
-    "hubot-redis-brain": "^1.0.0",
+    "hubot-redis-brain": "github:hubotio/hubot-redis-brain#2ab8963",
     "moment": "^2.29.1",
     "node-schedule": "^2.1.0",
     "punycode": "^2.1.1"
@@ -35,8 +35,8 @@
     "hubot-slack": "^4"
   },
   "engines": {
-    "node": ">= 12",
-    "npm": ">= 6"
+    "node": ">= 16",
+    "npm": ">= 8"
   },
   "bugs": {
     "url": "https://github.com/alleyinteractive/hubot-code-review/issues"
