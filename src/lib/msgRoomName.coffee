@@ -6,9 +6,9 @@ module.exports = (msg, next) ->
   if msg.robot.adapterName is "slack"
     msg.robot.http("https://slack.com/api/conversations.info")
       .query({
-        token: process.env.HUBOT_SLACK_TOKEN
         channel: msg.message.room
       })
+      .header('Authorization', 'Bearer ' + process.env.HUBOT_SLACK_TOKEN )
       .get() (err, response, body) ->
         channel = JSON.parse(body)
         next channel.channel.name
