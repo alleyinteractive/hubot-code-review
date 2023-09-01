@@ -396,8 +396,10 @@ class CodeReviews
                 if minutes >= 60 and # Equal to or longer than one hour
                 minutes < 120 and # Less than 2 hours
                 (minutes %% 60) < nag_delay # Is the first occurrence after an hour
-                  @robot.send { room: room }, "@here: :siren: This queue has been active for " +
-                  "an hour, someone get on this. :siren:\n_Reminding hourly from now on_"
+                  hour_message = process.env.HUBOT_CODE_REVIEW_HOUR_MESSAGE ||
+                    "@here: :siren: This queue has been active for an hour, someone get on this. " +
+                    ":siren:\n_Reminding hourly from now on_"
+                  @robot.send { room: room }, hour_message
                 else if minutes > 60
                   @robot.send { room: room }, "This is an hourly reminder."
             else

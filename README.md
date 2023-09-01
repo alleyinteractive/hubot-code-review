@@ -1,5 +1,4 @@
-hubot-code-review
-===================
+# hubot-code-review
 
 [![Travis branch](https://img.shields.io/travis/alleyinteractive/hubot-code-review/master.svg?maxAge=2592000)](https://travis-ci.org/alleyinteractive/hubot-code-review)
 [![npm version](https://badge.fury.io/js/hubot-code-review.svg)](https://badge.fury.io/js/hubot-code-review)
@@ -27,8 +26,8 @@ Once the review is complete, a GitHub webhook listener catches approvals and Dir
 
 ## Requirements
 
-* [Hubot](http://hubot.github.com/) ^3
-* [hubot-slack](https://github.com/slackapi/hubot-slack) ^4
+- [Hubot](http://hubot.github.com/) ^3
+- [hubot-slack](https://github.com/slackapi/hubot-slack) ^4
 
 ## Installation via NPM
 
@@ -63,55 +62,56 @@ To enable the script, add the hubot-code-review entry to the external-scripts.js
 Code review queuing and notifications will work out of the box, but magic like
 file type lookups or DMs when your PR is approved/rejected require 2 things:
 
-1) **Create a `hubot-code-review` webhook in GitHub so that Hubot can notice any changes**
+1. **Create a `hubot-code-review` webhook in GitHub so that Hubot can notice any changes**
 
 - [GitHub webhook instructions for hubot-code-review](/docs/github-webhook.md)
 
-2) **Set Environmental variables:**
+2. **Set Environmental variables:**
 
-- If you set ```HUBOT_ENTERPRISE_GITHUB_URL``` to `https://<your_enterprise_url>`, Hubot will use it as your enterprise URL instead of the default: `https://github.com`
+- If you set `HUBOT_ENTERPRISE_GITHUB_URL` to `https://<your_enterprise_url>`, Hubot will use it as your enterprise URL instead of the default: `https://github.com`
 
-- If ```HUBOT_GITHUB_TOKEN``` is set, Hubot can query the GitHub api for file type information on PR submission. Check out the instructions for configuring
-[`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
+- If `HUBOT_GITHUB_TOKEN` is set, Hubot can query the GitHub api for file type information on PR submission. Check out the instructions for configuring
+  [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
-- ```HUBOT_CODE_REVIEW_EMOJI_APPROVE``` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment (excluding a `comment.user.type` of `Bot`) on the PR that includes one or more emoji conveys PR approval and will DM the submitter accordingly.
+- `HUBOT_CODE_REVIEW_EMOJI_APPROVE` an [Alley Interactive](https://www.alleyinteractive.com) cultural relic before the days GitHub incorporated [pull request reviews](https://help.github.com/articles/about-pull-request-reviews/). If this variable is `true`, a comment (excluding a `comment.user.type` of `Bot`) on the PR that includes one or more emoji conveys PR approval and will DM the submitter accordingly.
 
-- Set ```HUBOT_CODE_REVIEW_FILE_EXTENSIONS``` to a space separated list of file extensions (_default "coffee css html js jsx md php rb scss sh txt yml"_) to configure what file types you prefer to group together in the ```HUBOT_CODE_REVIEW_META``` information alongside the PR slug in channel. Note that this requires a [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
+- Set `HUBOT_CODE_REVIEW_FILE_EXTENSIONS` to a space separated list of file extensions (_default "coffee css html js jsx md php rb scss sh txt yml"_) to configure what file types you prefer to group together in the `HUBOT_CODE_REVIEW_META` information alongside the PR slug in channel. Note that this requires a [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
-- Set ```HUBOT_CODE_REVIEW_KARMA_DISABLED``` to `true` to prevent Hubot from listening for any
-[code review karma](/docs/code-review-karma.md) commands.
+- Set `HUBOT_CODE_REVIEW_KARMA_DISABLED` to `true` to prevent Hubot from listening for any
+  [code review karma](/docs/code-review-karma.md) commands.
 
-- Set ```HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM``` to automatically display a monthly resetting code review leaderboard to a particular room (for more info, check out the [code review karma](/docs/code-review-karma.md) docs)
+- Set `HUBOT_CODE_REVIEW_KARMA_MONTHLY_AWARD_ROOM` to automatically display a monthly resetting code review leaderboard to a particular room (for more info, check out the [code review karma](/docs/code-review-karma.md) docs)
 
-- Set ```HUBOT_CODE_REVIEW_META``` to one of [ `files`, `title`, `none`, `both` (_default `files`_) ] to configure whether to display the pull request title, file types, or both alongside the PR slug in channel. Note that this requires a [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
+- Set `HUBOT_CODE_REVIEW_META` to one of [ `files`, `title`, `none`, `both` (_default `files`_) ] to configure whether to display the pull request title, file types, or both alongside the PR slug in channel. Note that this requires a [`HUBOT_GITHUB_TOKEN` for hubot-code-review](/docs/HUBOT_GITHUB_TOKEN.md)
 
-- Set ```HUBOT_CODE_REVIEW_REMINDER_MINUTES``` to customize the number of minutes between pending code review prompts during the first hour of inactivity (the default is 5, and the effective max is 60). Note that hourly reminders will still take effect after the first 60 minutes.
+- Set `HUBOT_CODE_REVIEW_REMINDER_MINUTES` to customize the number of minutes between pending code review prompts during the first hour of inactivity (the default is 5, and the effective max is 60). Note that hourly reminders will still take effect after the first 60 minutes.
+
+- Set `HUBOT_CODE_REVIEW_HOUR_MESSAGE` to customize the message that is displayed for the first-hour warning.
+
 ## Usage
 
 `hubot help crs` - See a help document explaining how to use.
 
-	{GitHub pull request URL} [@user]   Add PR to queue and (optionally) notify @user or #channel
-	[hubot ]on it                       Claim the oldest _new_ PR in the queue
-	[hubot ]userName is on it           Tell hubot that userName has claimed the oldest _new_ PR in the queue
-	on *                                Claim all _new_ PRs
-	[userName is ]on cool-repo/123      Claim cool-repo/123 if no one else has claimed it
-	[userName is ]on cool               Claim a _new_ PR whose slug matches cool
-	hubot (nm|ignore) cool-repo/123		Delete cool-repo/123 from queue regardless of status
-	hubot (nm|ignore) cool            	Delete most recently added PR whose slug matches cool
-	hubot (nm|ignore)                   Delete most recently added PR from the queue regardless of status
-	hubot redo cool-repo/123            Allow another review _without_ decrementing previous reviewer's score
-	hubot (unclaim|reset) cool-repo/123 Reset CR status to new/unclaimed _and_ decrement reviewer's score
-	hubot list crs                      List all _unclaimed_ CRs in the queue
-	hubot list [status] crs             List CRs with matching optional status
+    {GitHub pull request URL} [@user]   Add PR to queue and (optionally) notify @user or #channel
+    [hubot ]on it                       Claim the oldest _new_ PR in the queue
+    [hubot ]userName is on it           Tell hubot that userName has claimed the oldest _new_ PR in the queue
+    on *                                Claim all _new_ PRs
+    [userName is ]on cool-repo/123      Claim cool-repo/123 if no one else has claimed it
+    [userName is ]on cool               Claim a _new_ PR whose slug matches cool
+    hubot (nm|ignore) cool-repo/123		Delete cool-repo/123 from queue regardless of status
+    hubot (nm|ignore) cool            	Delete most recently added PR whose slug matches cool
+    hubot (nm|ignore)                   Delete most recently added PR from the queue regardless of status
+    hubot redo cool-repo/123            Allow another review _without_ decrementing previous reviewer's score
+    hubot (unclaim|reset) cool-repo/123 Reset CR status to new/unclaimed _and_ decrement reviewer's score
+    hubot list crs                      List all _unclaimed_ CRs in the queue
+    hubot list [status] crs             List CRs with matching optional status
+
 _Note that some commands require direct @hubot, some don't, and some work either way._
 
+_Code review statuses_
 
-*Code review statuses*
-
-	new		PR has just been added to the queue, no one is on it.
-	claimed		Someone is on this PR
-	approved	PR was approved. Requires GitHub webhook.
-	merged		PR was merged and closed. Requires GitHub webhook.
-	closed		PR was closed without merging. Requires GitHub webhook.
-
-
+    new		PR has just been added to the queue, no one is on it.
+    claimed		Someone is on this PR
+    approved	PR was approved. Requires GitHub webhook.
+    merged		PR was merged and closed. Requires GitHub webhook.
+    closed		PR was closed without merging. Requires GitHub webhook.
