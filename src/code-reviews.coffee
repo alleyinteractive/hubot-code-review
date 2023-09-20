@@ -18,6 +18,9 @@ module.exports = (robot) ->
   code_reviews = new CodeReviews robot
 
   enqueue_code_review = (msg) ->
+    # Ignore all bot messages
+    if msg.message.user?.slack?.is_bot
+      return
     url = msg.match[1]
     slug = code_reviews.matches_to_slug msg.match
     msgRoomName msg, (room_name) ->
@@ -127,6 +130,9 @@ module.exports = (robot) ->
   # Claim first PR in queue wihout directly addressing hubot
   # Note the this is a `hear` listener and previous is a `respond`
   robot.hear /^(?:([-_a-z0-9]+) is )?on it$/, (msg) ->
+    # Ignore all bot messages
+    if msg.message.user?.slack?.is_bot
+      return
     reviewer = msg.match[1] or msg.message.user.name
     msgRoomName msg, (room_name) ->
       cr = code_reviews.claim_first room_name, reviewer
@@ -137,6 +143,9 @@ module.exports = (robot) ->
   @desc     Claim all _new_ PRs
   ###
   robot.hear /^on \*$/i, (msg) ->
+    # Ignore all bot messages
+    if msg.message.user?.slack?.is_bot
+      return
     msg.emote ":tornado2:"
     reviewer = msg.message.user.name
     msgRoomName msg, (room_name) ->
@@ -150,6 +159,9 @@ module.exports = (robot) ->
   @desc    Claim a _new_ PR whose slug matches `cool`
   ###
   robot.hear /^(?:([-_a-z0-9]+) is )?(?:on) ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+)$/i, (msg) ->
+    # Ignore all bot messages
+    if msg.message.user?.slack?.is_bot
+      return
     reviewer = msg.match[1] or msg.message.user.name
     slug = msg.match[2]
     return if slug.toLowerCase() is 'it'
