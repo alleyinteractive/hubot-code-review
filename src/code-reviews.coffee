@@ -24,9 +24,9 @@ module.exports = (robot) ->
     url = msg.match[1]
     slug = code_reviews.matches_to_slug msg.match
     msgRoomName msg, (room_name) ->
-      if slug
+      if slug and room_name
         cr = new CodeReview msg.message.user, slug, url
-        # Specific override for human readable cr.user.room
+        # Specific override for human readable room name
         cr.user.room = room_name
         found = code_reviews.find_slug_index room_name, slug
         if found is false
@@ -52,7 +52,7 @@ module.exports = (robot) ->
             reviewerMsg = ''
           msg.send "*#{slug}* is already in the queue#{reviewerMsg}"
       else
-        msg.send "Error adding #{url} to queue"
+        msg.send "Unable to add #{url} to queue. Please try again."
 
   # Respond to message with matching slug names
   #
@@ -124,8 +124,9 @@ module.exports = (robot) ->
   robot.respond /(?:([-_a-z0-9]+) is )?on it/i, (msg) ->
     reviewer = msg.match[1] or msg.message.user.name
     msgRoomName msg, (room_name) ->
-      cr = code_reviews.claim_first room_name, reviewer
-      dequeue_code_review cr, reviewer, msg
+      if room_name
+        cr = code_reviews.claim_first room_name, reviewer
+        dequeue_code_review cr, reviewer, msg
 
   # Claim first PR in queue wihout directly addressing hubot
   # Note the this is a `hear` listener and previous is a `respond`
@@ -135,8 +136,9 @@ module.exports = (robot) ->
       return
     reviewer = msg.match[1] or msg.message.user.name
     msgRoomName msg, (room_name) ->
-      cr = code_reviews.claim_first room_name, reviewer
-      dequeue_code_review cr, reviewer, msg
+      if room_name
+        cr = code_reviews.claim_first room_name, reviewer
+        dequeue_code_review cr, reviewer, msg
 
   ###
   @command  on *
@@ -149,8 +151,9 @@ module.exports = (robot) ->
     msg.emote ":tornado2:"
     reviewer = msg.message.user.name
     msgRoomName msg, (room_name) ->
-      until false is cr = code_reviews.claim_first room_name, reviewer
-        dequeue_code_review cr, reviewer, msg
+      if room_name
+        until false is cr = code_reviews.claim_first room_name, reviewer
+          dequeue_code_review cr, reviewer, msg
 
   ###
   @command [userName is ]on cool-repo/123
@@ -167,19 +170,20 @@ module.exports = (robot) ->
     return if slug.toLowerCase() is 'it'
 
     msgRoomName msg, (room_name) ->
-      unclaimed_cr = single_matching_cr(slug, room_name, msg, status = "new")
-      if (unclaimed_cr)?
-        code_reviews.claim_by_slug room_name, unclaimed_cr.slug, reviewer
-        dequeue_code_review unclaimed_cr, reviewer, msg
+      if room_name
+        unclaimed_cr = single_matching_cr(slug, room_name, msg, status = "new")
+        if (unclaimed_cr)?
+          code_reviews.claim_by_slug room_name, unclaimed_cr.slug, reviewer
+          dequeue_code_review unclaimed_cr, reviewer, msg
 
-      # none of the matches have "new" status
-      else
-        cr = single_matching_cr(slug, room_name, msg, status = false, no_output = true)
-        # When someone attempts to claim a PR
-        # that was already reviewed, merged, or closed outside of the queue
-        if (cr)?
-          response = "It looks like *#{cr.slug}* (@#{cr.user.name}) has already been #{cr.status}"
-          msg.send response
+        # none of the matches have "new" status
+        else
+          cr = single_matching_cr(slug, room_name, msg, status = false, no_output = true)
+          # When someone attempts to claim a PR
+          # that was already reviewed, merged, or closed outside of the queue
+          if (cr)?
+            response = "It looks like *#{cr.slug}* (@#{cr.user.name}) has already been #{cr.status}"
+            msg.send response
 
   ###
   @command hubot (nm|ignore) cool-repo/123
@@ -192,15 +196,16 @@ module.exports = (robot) ->
     return if slug.toLowerCase() is 'it'
 
     msgRoomName msg, (room_name) ->
-      found_ignore_cr = single_matching_cr(slug, room_name, msg)
-      if (found_ignore_cr)?
-        code_reviews.remove_by_slug room_name, found_ignore_cr.slug
-        #decrement scores
-        code_review_karma.decr_score found_ignore_cr.user.name, 'take'
-        if found_ignore_cr.reviewer
-          code_review_karma.decr_score found_ignore_cr.reviewer, 'give'
-        msg.send "Sorry for eavesdropping. I removed *#{found_ignore_cr.slug}* from the queue."
-        return
+      if room_name
+        found_ignore_cr = single_matching_cr(slug, room_name, msg)
+        if (found_ignore_cr)?
+          code_reviews.remove_by_slug room_name, found_ignore_cr.slug
+          #decrement scores
+          code_review_karma.decr_score found_ignore_cr.user.name, 'take'
+          if found_ignore_cr.reviewer
+            code_review_karma.decr_score found_ignore_cr.reviewer, 'give'
+          msg.send "Sorry for eavesdropping. I removed *#{found_ignore_cr.slug}* from the queue."
+          return
 
   ###
   @command hubot: (nm|ignore)
@@ -208,14 +213,15 @@ module.exports = (robot) ->
   ###
   robot.respond /(?:\s*)(?:nm|ignore)(?:\s*)$/i, (msg) ->
     msgRoomName msg, (room_name) ->
-      cr = code_reviews.remove_last_new room_name
-      if cr and cr.slug
-        code_review_karma.decr_score cr.user.name, 'take'
-        if cr.reviewer
-          code_review_karma.decr_score cr.reviewer, 'give'
-        msg.send "Sorry for eavesdropping. I removed *#{cr.slug}* from the queue."
-      else
-        msg.send "There might not be a new PR to remove. Try specifying a slug."
+      if room_name
+        cr = code_reviews.remove_last_new room_name
+        if cr and cr.slug
+          code_review_karma.decr_score cr.user.name, 'take'
+          if cr.reviewer
+            code_review_karma.decr_score cr.reviewer, 'give'
+          msg.send "Sorry for eavesdropping. I removed *#{cr.slug}* from the queue."
+        else
+          msg.send "There might not be a new PR to remove. Try specifying a slug."
 
   ###
   @command hubot: redo cool-repo/123
@@ -223,11 +229,12 @@ module.exports = (robot) ->
   ###
   robot.respond /(?:redo)(?: ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+))/i, (msg) ->
     msgRoomName msg, (room_name) ->
-      found_redo_cr = single_matching_cr(msg.match[1], room_name, msg)
-      if (found_redo_cr)?
-        index = code_reviews.find_slug_index room_name, found_redo_cr.slug
-        code_reviews.reset_cr code_reviews.room_queues[room_name][index]
-        msg.send "You got it, #{found_redo_cr.slug} is ready for a new review."
+      if room_name
+        found_redo_cr = single_matching_cr(msg.match[1], room_name, msg)
+        if (found_redo_cr)?
+          index = code_reviews.find_slug_index room_name, found_redo_cr.slug
+          code_reviews.reset_cr code_reviews.room_queues[room_name][index]
+          msg.send "You got it, #{found_redo_cr.slug} is ready for a new review."
 
   ###
   @command hubot: (unclaim|reset) cool-repo/123
@@ -235,16 +242,17 @@ module.exports = (robot) ->
   ###
   robot.respond /(unclaim|reset)(?: ([-_\/a-z0-9]+|\d+|[-_\/a-z0-9]+\/\d+))?/i, (msg) ->
     msgRoomName msg, (room_name) ->
-      found_reset_cr = single_matching_cr(msg.match[2], room_name, msg)
-      if (found_reset_cr)?
-        # decrement reviewers CR score
-        if found_reset_cr.reviewer
-          code_review_karma.decr_score found_reset_cr.reviewer, 'give'
+      if room_name
+        found_reset_cr = single_matching_cr(msg.match[2], room_name, msg)
+        if (found_reset_cr)?
+          # decrement reviewers CR score
+          if found_reset_cr.reviewer
+            code_review_karma.decr_score found_reset_cr.reviewer, 'give'
 
-          index = code_reviews.find_slug_index room_name, found_reset_cr.slug
-          code_reviews.reset_cr code_reviews.room_queues[room_name][index]
-          msg.match[1] += 'ed' if msg.match[1].toLowerCase() is 'unclaim'
-          msg.send "You got it, I've #{msg.match[1]} *#{found_reset_cr.slug}* in the queue."
+            index = code_reviews.find_slug_index room_name, found_reset_cr.slug
+            code_reviews.reset_cr code_reviews.room_queues[room_name][index]
+            msg.match[1] += 'ed' if msg.match[1].toLowerCase() is 'unclaim'
+            msg.send "You got it, I've #{msg.match[1]} *#{found_reset_cr.slug}* in the queue."
 
   ###
   @command hubot: list crs
@@ -255,7 +263,8 @@ module.exports = (robot) ->
   robot.respond /list(?: (all|new|claimed|approved|closed|merged))? CRs/i, (msg) ->
     status = msg.match[1] || 'new'
     msgRoomName msg, (room_name) ->
-      code_reviews.send_list room_name, true, status
+      if room_name
+        code_reviews.send_list room_name, false, status
 
   # Flush all CRs in all rooms
   robot.respond /flush the cr queue, really really/i, (msg) ->
