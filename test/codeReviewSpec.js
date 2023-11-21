@@ -118,7 +118,8 @@ describe('Code Review', () => {
       // there should now be one room from the current user
       const rooms = Object.keys(code_reviews.room_queues);
       expect(rooms.length).toEqual(1);
-      expect(rooms[0]).toEqual(currentUser.room);
+      expect(rooms[0]).toEqual(code_reviews.room_queues[rooms[0]][0].room);
+      expect(rooms[0]).toEqual(code_reviews.room_queues[rooms[0]][0].channel_id);
 
       // there should be one CR in the room queue
       expect(code_reviews.room_queues[rooms[0]].length).toEqual(1);
@@ -136,7 +137,7 @@ describe('Code Review', () => {
   it('will not a allow the same CR in the same room regardless of status', (done) => {
     const currentUser = users[7];
     const url = PullRequests[4];
-    code_reviews.add(new CodeReview(currentUser, makeSlug(url), url));
+    code_reviews.add(new CodeReview(currentUser, makeSlug(url), url, currentUser.room, currentUser.room));
 
     // listener for second time the CR is added
     adapter.on('send', (envelope, strings) => {
@@ -163,7 +164,7 @@ describe('Code Review', () => {
     const currentUser = users[12];
     const url = PullRequests[6];
     const firstRoom = currentUser.room;
-    code_reviews.add(new CodeReview(currentUser, makeSlug(url), url));
+    code_reviews.add(new CodeReview(currentUser, makeSlug(url), url, firstRoom, firstRoom));
 
     // listener for second time the CR is added
     adapter.on('send', (envelope, strings) => {
@@ -358,8 +359,8 @@ describe('Code Review', () => {
     code_reviews.room_queues.test_room = [];
     code_reviews.room_queues.second_room = [];
     PullRequests.forEach((url, i) => {
-      const cr = new CodeReview(users[6], makeSlug(url), url);
       const room = 3 >= i ? 'test_room' : 'second_room';
+      const cr = new CodeReview(users[6], makeSlug(url), url, room, room);
       code_reviews.room_queues[room].unshift(cr);
     });
     expect(roomStatusCount('test_room', 'new')).toBe(4);
@@ -629,7 +630,7 @@ describe('Code Review', () => {
     const halfHourInMs = 1000 * 60 * 30;
     // add CRs with different ages and statuses
     statuses.forEach((status, i) => {
-      const cr = new CodeReview(users[i], makeSlug(PullRequests[i]), PullRequests[i]);
+      const cr = new CodeReview(users[i], makeSlug(PullRequests[i]), PullRequests[i], users[i].room, users[i].room);
       cr.status = status;
       cr.last_updated += -1 * i * halfHourInMs;
       code_reviews.add(cr);
@@ -990,7 +991,7 @@ describe('Code Review', () => {
         submitter[key] = userMeta[key];
       });
     }
-    code_reviews.add(new CodeReview(submitter, makeSlug(url), url));
+    code_reviews.add(new CodeReview(submitter, makeSlug(url), url, submitter.room, submitter.room));
   }
 
   /**

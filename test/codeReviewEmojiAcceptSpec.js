@@ -271,7 +271,7 @@ describe('Code Review Emoji Approval', () => {
         submitter[key] = userMeta[key];
       });
     }
-    code_reviews.add(new CodeReview(submitter, makeSlug(url), url));
+    code_reviews.add(new CodeReview(submitter, makeSlug(url), url), submitter.room, submitter.room);
   }
 
   /**
