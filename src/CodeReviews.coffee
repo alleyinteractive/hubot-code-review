@@ -178,7 +178,7 @@ class CodeReviews
   # Add a CR to a room queue
   #
   # @param CodeReview cr Code Review object to add
-  # @retun none
+  # @return none
   add: (cr) ->
     return unless cr.room
     @room_queues[cr.room] ||= []
