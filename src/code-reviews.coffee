@@ -25,9 +25,7 @@ module.exports = (robot) ->
     slug = code_reviews.matches_to_slug msg.match
     msgRoomName msg, (room_name) ->
       if slug and room_name
-        cr = new CodeReview msg.message.user, slug, url
-        # Specific override for human readable room name
-        cr.user.room = room_name
+        cr = new CodeReview msg.message.user, slug, url, room_name, msg.message.room
         found = code_reviews.find_slug_index room_name, slug
         if found is false
           # 'Take' a code review for karma
@@ -287,12 +285,12 @@ module.exports = (robot) ->
       return
 
     # Check if PR was approved (via emoji in issue_comment body)
-    if req.headers['x-github-event'] is 'issue_comment'
+    if req.headers['x-github-event'] is 'issue_comment' and
+    req.body.comment.user.type != 'Bot' # Commenter is not a bot
       if ((process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE?) and
       process.env.HUBOT_CODE_REVIEW_EMOJI_APPROVE)
         if (code_reviews.emoji_regex.test(req.body.comment.body) or
-        code_reviews.emoji_unicode_test(req.body.comment.body)) and
-        req.body.comment.user.type != 'Bot'
+        code_reviews.emoji_unicode_test(req.body.comment.body))
           code_reviews.approve_cr_by_url(
             req.body.issue.html_url,
             req.body.comment.user.login,
@@ -323,7 +321,7 @@ module.exports = (robot) ->
         if updated.length
           response = "set status of #{updated[0].slug} to "
           rooms = for cr in updated
-            "#{cr.status} in #{cr.user.room}"
+            "#{cr.status} in #{cr.room}"
           response += rooms.join(', ')
         else
           response = "#{req.body.pull_request.html_url} not found in any queue"
@@ -331,7 +329,8 @@ module.exports = (robot) ->
         response = "#{req.body.pull_request.html_url} is still open"
 
     # Check if PR was approved via GitHub's Pull Request Review
-    else if req.headers['x-github-event'] is 'pull_request_review'
+    else if req.headers['x-github-event'] is 'pull_request_review' and
+    req.body.review.user.type != 'Bot' # not a bot
       if req.body.action? and req.body.action is 'dismissed'
         response = "pull_request_review dismissed #{req.body.pull_request.html_url}"
         code_reviews.dismiss_cr_by_url(

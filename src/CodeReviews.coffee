@@ -178,11 +178,11 @@ class CodeReviews
   # Add a CR to a room queue
   #
   # @param CodeReview cr Code Review object to add
-  # @retun none
+  # @return none
   add: (cr) ->
-    return unless cr.user.room
-    @room_queues[cr.user.room] ||= []
-    @room_queues[cr.user.room].unshift(cr) if false == @find_slug_index(cr.user.room, cr.slug)
+    return unless cr.room
+    @room_queues[cr.room] ||= []
+    @room_queues[cr.room].unshift(cr) if false == @find_slug_index(cr.room, cr.slug)
     @update_redis()
     @reminder_count = 0
     @queue()
