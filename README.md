@@ -5,6 +5,12 @@
 
 A Hubot script for GitHub code review on Slack.
 
+## NO LONGER MAINTAINED
+
+This project is no longer maintained. Alley is no longer using this project internally (we moved all code review workflows onto our other (free) Slack app [Helperbot](https://helperbot.alley.com) for a more integrated experience).
+
+We are leaving it up for historical purposes. If you are interested in taking over maintenance, please reach out to us.
+
 ## tldr;
 
 Drop a GitHub pull request url into a room, and Hubot adds the pull request
